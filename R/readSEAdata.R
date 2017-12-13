@@ -166,10 +166,17 @@ readbioll <- function(df,X=NULL) {
 
 
 
-#####
-# READ ADCP
-#####
-# Function to read in adcp data files in the format exported before conversion to ODV
+
+#' Read in adcp data files in the format exported before conversion to ODV
+#'
+#' This needs to be updated to instread read directly from the .ENS files to skip steps in on-board processing
+#'
+#' @param filein .txt file to read from
+#' @keywords
+#' @export
+#' @examples
+#' readSEAadcp()
+#'
 readSEAadcp <- function(filein) {
 
   # reads in the file as individual lines
@@ -203,8 +210,18 @@ readSEAadcp <- function(filein) {
   return(list(u=u,v=v,lon=lon,lat=lat))
 }
 
-# Functon that reads in all ADCP files in diretory
-readSEAadcp_all <- function(foldin,clean=T) {
+
+#' Read all adcp data files on a folder in the format exported before conversion to ODV
+#'
+#' As readSEAadcp, this needs to be updated to instread read directly from the .ENS files to skip steps in on-board processing
+#'
+#' @param foldin folder containing all the .txt file to read from
+#' @keywords
+#' @export
+#' @examples
+#' readSEAadcp_all()
+#'
+readSEAadcp_all <- function(foldin) {
   files <- list.files(path=foldin, pattern="^ADCP.*30.txt$")
   comp <- unlist(strsplit(gsub(cruiseID,paste(cruiseID,'-',sep=''),files),'[-_]'))
   ii <- grep(cruiseID,comp)
@@ -233,9 +250,24 @@ readSEAadcp_all <- function(foldin,clean=T) {
 
 
 
-########
-# Function to read in any SEA xls or xlsm spreadsheet
-########
+#' Read in SEA data from an Excel spreadsheet
+#'
+#' Function used commonly as much data entry and organization is acheived in this format
+#'
+#' Notes: Requires readxl package. readxl is slower than read.table so the function creates
+#' a .csv file of the output for quicker reading next time. Can be overridded using rplcsv.
+#'
+#' @param filein .xls, .xlsm, .xlsx file to read from
+#' @param skip Number of rows to skip at the top of the xls file before reading
+#' @param sheet Number of the sheet in the file to be read
+#' @param rplcsv Function will create a csv file in the same directory as the
+#' xls file for quicker reading next time. rplcsv will override whether this function
+#' will overwrite that or look for it and read from it.
+#' @keywords
+#' @export
+#' @examples
+#' readSEAxls()
+#'
 readSEAxls <- function(filein,skip=0,sheet=1,rplcsv=FALSE) {
   ext <- tools::file_ext(filein)
   filecsv <- gsub(ext,"csv",filein)
@@ -257,7 +289,20 @@ readSEAxls <- function(filein,skip=0,sheet=1,rplcsv=FALSE) {
 
 
 
-# Function to read in any already converted csv file produced by readSEAxls
+#' Read in SEA data from a CSV file
+#'
+#' Function used commonly as quick way of taking SEA data previously
+#' converted from xls to csv using readSEAxls()
+#'
+#' Notes: Is called automatically from readSEAxls() if the csv file is located in the same
+#' directory as the xls file, unless rplcsv is set to T.
+#'
+#' @param filein .csv file to read from
+#' @keywords
+#' @export
+#' @examples
+#' readSEAcsv()
+#'
 readSEAcsv <- function(filein) {
   df <- read.csv(filein,stringsAsFactors = F)
   return(df)
@@ -267,11 +312,19 @@ readSEAcsv <- function(filein) {
 
 
 
-######
-# READ ELG
-######
-
-# Read in any SEA ELG event file
+#' Read in SEA data an ELG event file
+#'
+#' SEA event files contain output from a number of instruments
+#' including GPS, flow-through, chirp, etc.
+#'
+#' @param filein .elg file to be read in
+#' @param clean logical used to determine whether certain fields are
+#' despiked and times when system is backflooded can be removed.
+#' @keywords
+#' @export
+#' @examples
+#' readSEAelg()
+#'
 readSEAelg <- function(filein,clean=T) {
 
   df <- read.csv(filein,stringsAsFactors=F,colClasses = "character")
@@ -330,11 +383,16 @@ readSEAelg <- function(filein,clean=T) {
 
 
 
-######
-# READ LAT LON FROM CNV
-######
-
-# Read lat and Lon from header of CTD CNV file
+#' Read lat and Lon from header of CTD CNV file
+#'
+#' Function searches reg exp combinations to find the lat and lon of the CTD
+#'
+#' @param filein .cnv file to be read from
+#' @keywords
+#' @export
+#' @examples
+#' readLatLon()
+#'
 readLatLon <- function(filein) {
 
   r <- readLines(filein,encoding ='UTF-8')
@@ -455,7 +513,19 @@ readLatLon <- function(filein) {
 }
 
 
-
+#' Read data from an RBR used as a Tow-Yo
+#'
+#' Function reads in data, cuts it up into casts and outputs.
+#' If ELG file is also provided, it can assign these casts
+#' to GPS locations.
+#'
+#' @param filein .dat RBR file to be read from
+#' @param elg option .elg file to be read in for locations.
+#' @keywords
+#' @export
+#' @examples
+#' readLatLon()
+#'
 readRBRtow <- function(filein,elg=NULL) {
   r <- readLines(filein,50)
   line <- grep("Cond",r)-1;

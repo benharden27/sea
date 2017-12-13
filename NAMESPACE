@@ -2,5 +2,12 @@
 
 export(makeFolders)
 export(readCTDsll)
+export(readLatLon)
+export(readRBRtow)
+export(readSEAadcp)
+export(readSEAadcp_all)
+export(readSEAcsv)
 export(readSEActd)
+export(readSEAelg)
+export(readSEAxls)
 export(readbioll)
