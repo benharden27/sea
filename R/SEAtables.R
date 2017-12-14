@@ -1,24 +1,32 @@
-# Load the OCE package
-library(oce)
-library(ocedata)
-library(xtable)
+#######
+# Make LATEX tables from SEA data
+#######
 
 
-
-########
-# MAKE TABLE
-########
+#' Does the final table printing and saving after data has been edited
+#'
+#' Should only be called from one of the SEA table functions
+#'
+#' @param dfo data frame of data ready to be exported
+#' @param caption caption of table.
+#' @param SigF vector of significant figures for each column
+#' @param secondRow List of entries for second row of table headings if needed
+#' @param thirdRow List of entries for third row of table headings if needed
+#' @param fileout name and location of the file to be exported
+#' @export
+#' @examples
+#' printTable()
 printTable <- function(dfo,caption="",SigF=NULL,secondRow=NULL,thirdRow=NULL,fileout="~/Desktop/tableOutput.tex") {
-  
+
   outTable<-xtable(dfo,caption = caption)
   align(outTable) <- rep("c", ncol(dfo)+1)
   if(!is.null(SigF)) {
     digits(outTable) <- SigF
   }
-  
-  
+
+
   add.to.row <- list(pos = list(0), command = NULL)
-  
+
   if(!is.null(secondRow)) {
     secondRowAdd <- paste0(paste(secondRow,collapse=' & ')," \\\\ \n")
   } else {
@@ -41,15 +49,15 @@ printTable <- function(dfo,caption="",SigF=NULL,secondRow=NULL,thirdRow=NULL,fil
                     "{\\footnotesize Continued on next page}\n",
                     "\\endfoot\n",
                     "\\endlastfoot\n")
-  
+
   add.to.row$command <- command
-  
+
   a<-print(outTable, hline.after=c(0), add.to.row = add.to.row,
            tabular.environment = "longtable",
            floating=F,
            include.rownames = FALSE,
            caption.placement = 'top')
-  
+
   fileout <- gsub(" ","",fileout)
   fileConn<-file(fileout)
   writeLines(a, fileConn)
@@ -58,14 +66,18 @@ printTable <- function(dfo,caption="",SigF=NULL,secondRow=NULL,thirdRow=NULL,fil
 
 
 
-########
-# STATION SUMMARY TABLE
-########
+#' Creates station summary table
+#'
+#' @param filename Path of the file to be read in
+#' @param saveLoc Folder to save the output
+#' @export
+#' @examples
+#' tableStatSum()
 tableStatSum <- function(filename,saveLoc = "~/Desktop") {
-  
+
   file <- tail(strsplit(filename,'/')[[1]],1)
   ext <- tools::file_ext(file)
-  
+
   dfa <- readSEAxls(filename,rplcsv = T)
   df <- readSEAxls(filename,skip=1,rplcsv = T)
   names(df) <- names(dfa)
@@ -90,13 +102,13 @@ tableStatSum <- function(filename,saveLoc = "~/Desktop") {
   df$Shipek.Grab <- substr(gsub('[0-9]','X',gsub('0','',as.character(rowSums((!is.na(df[,xi]))+0)))),1,1)
   xi <- sort(append(grep('Phyto',names(df)),grep('Phyto',names(df))+1))
   df$Phyto.Net <- substr(gsub('[A-Z0-9]','X',gsub('0','',as.character(rowSums((!is.na(df[,xi]))+0)))),1,1)
-  
-  
+
+
   Time <- df[,grep('Start',names(df))[1]]
   Time <- format(Time,format="%H:%M")
-  
+
   Date <- format(df$Date,format="%Y-%m-%d")
-  # Create Output data frame 
+  # Create Output data frame
   dfo <- data.frame(Station = df$Station.Number,
                     Date = Date,
                     Time = Time,
@@ -117,33 +129,36 @@ tableStatSum <- function(filename,saveLoc = "~/Desktop") {
 
   dfo<- dfo[!sapply(dfo, function (k) all(k==''))]
   caption <- paste0("\\label{stationSummary} Summary of oceanographic sampling stations for SEA Cruise ",cruiseID,". [",dim(dfo)[1]," Stations]")
-  
+
   fileout <- file.path(saveLoc,gsub(ext,'tex',file))
-  
+
   printTable(dfo,caption=caption,fileout=fileout)
 
 }
 
 
+#' Creates Hydrocast table
+#'
+#' @param filename Path of the file to be read in
+#' @param saveLoc Folder to save the output
+#' @export
+#' @examples
+#' tableHydro()
+tableHydro <- function(filename,saveLoc = "~/Desktop") {
 
-########
-# HYDROCASTS
-########
-tableHydro <- function(filename,output=T,saveLoc = "~/Desktop") {
-  
   file <- tail(strsplit(filename,'/')[[1]],1)
   ext <- tools::file_ext(file)
-  
+
   df <- readSEAxls(filename,rplcsv = T)
   names(df) <- gsub(' ','.',names(df))
 
   Time <- df[,grep('Start',names(df))[1]]
   Time <- format(Time,format="%H:%M")
   Date <- format(df$Date,format="%Y-%m-%d")
-  
+
   Bottled <- as.character(round(as.numeric(df[,grep("Corr",names(df))])))
   Bottled[is.na(Bottled)&df$Bottle!=13] <- 'DNF'
-  
+
   df$Bottle[grep('SS',df$Bottle)] <- "13"
   Bottled[is.na(Bottled)&df$Bottle==13] <- '0'
 
@@ -162,33 +177,37 @@ tableHydro <- function(filename,output=T,saveLoc = "~/Desktop") {
   colnames(dfo) <- c('Station','Date','Time','Bottle','Bottle Depth','NO3','PO4','pH','Chl-a','Temperature','Salinity')
   secondRow <- c('','','(local)','','[m]','[uM]','[uM]','','[mg/L]','[degC]','')
   SigF <- c(20,20,20,20,0,0,2,2,2,3,1,2)
-  
+
   emptyCols <- (sapply(dfo, function (k) all(k==''))|sapply(dfo, function (k) all(is.na(k))))
   dfo<- dfo[!emptyCols]
   secondRow <- secondRow[!emptyCols]
   SigF <- SigF[!emptyCols]
   caption = paste0("\\label{hydrowork} Hydrocast station data for SEA Cruise ",cruiseID,". Locations as in Table \\ref{stationSummary}")
-  
+
   fileout <- file.path(saveLoc,gsub(ext,'tex',file))
   printTable(dfo,caption=caption,SigF=SigF,secondRow=secondRow,fileout=fileout)
 }
 
 
 
-#######
-# CTD work
-#######
-tableCTD <- function(filename,output=T,saveLoc = "~/Desktop") {
+#' Creates CTD summary table
+#'
+#' @param filename Path of the file to be read in
+#' @param saveLoc Folder to save the output
+#' @export
+#' @examples
+#' tableCTD()
+tableCTD <- function(filename,saveLoc = "~/Desktop") {
   file <- tail(strsplit(filename,'/')[[1]],1)
   ext <- tools::file_ext(file)
-  
+
   df <- readSEAxls(filename,rplcsv = T)
   names(df) <- gsub(' ','.',names(df))
-  
+
   Time <- df[,grep('Time',names(df))[1]]
   Time <- format(Time,format="%H:%M")
   Date <- format(df$Date,format="%Y-%m-%d")
-  
+
   dfo <- data.frame(Station=df$Station,
                   Date=Date,
                   Time=Time,
@@ -203,22 +222,26 @@ tableCTD <- function(filename,output=T,saveLoc = "~/Desktop") {
   SigF <- c(20,20,20,20,1,2,2,0)
   caption <- paste0("\\label{ctdwork} CTD station data for SEA Cruise ",cruiseID,". Locations as in Table \\ref{stationSummary}")
   fileout <- file.path(saveLoc,gsub(ext,'tex',file))
-  
+
   printTable(dfo,caption=caption,SigF=SigF,secondRow=secondRow,fileout=fileout)
-  
+
 }
 
 
-######
-# SURFACE SAMPLES
-######
-tableSS <- function(filename,output=T,saveLoc = "~/Desktop") {
+#' Creates surface station summary table
+#'
+#' @param filename Path of the file to be read in
+#' @param saveLoc Folder to save the output
+#' @export
+#' @examples
+#' tableSS()
+tableSS <- function(filename,saveLoc = "~/Desktop") {
   file <- tail(strsplit(filename,'/')[[1]],1)
   ext <- tools::file_ext(file)
-  
+
   df <- readSEAxls(filename,rplcsv = T)
   names(df) <- gsub(' ','.',names(df))
-  
+
   Time <- df[,grep('Time',names(df))[1]]
   Time <- format(Time,format="%H:%M")
   Date <- format(df$Date,format="%Y-%m-%d")
@@ -239,7 +262,7 @@ tableSS <- function(filename,output=T,saveLoc = "~/Desktop") {
                    stringsAsFactors = F)
   colnames(dfo) <- c('Station','Date','Time','Longitude','Latitude','Temperature','Salinity')
   secondRow <- c('','','(local)','','','[degC]','')
-  
+
   possVar <- c('chla','Nit','Phos','pH','Alk')
   nameVar <- c('Chl-a','NO3','PO4','pH','Total Alk.')
   unitVar <- c('[mg/L]','[uM]','[uM]','','[Meq/L]')
@@ -258,18 +281,24 @@ tableSS <- function(filename,output=T,saveLoc = "~/Desktop") {
   SigF <- append(initSig,usedSig)
   colnames(dfo) <- append(initCol,usedVar)
   fileout <- file.path(saveLoc,gsub(ext,'tex',file))
-  caption = paste0("\\label{surfsamp} Surface station data for SEA Cruise ",cruiseID) 
+  caption = paste0("\\label{surfsamp} Surface station data for SEA Cruise ",cruiseID)
 
   printTable(dfo,caption=caption,SigF=SigF,secondRow=secondRow,fileout=fileout)
-  
+
 }
 
 
-########
-# NEUSTON DATA SHEET
-########
-tableNeuston <- function(filename,output=T,saveLoc = "~/Desktop",which=c(1,2)) {
-  
+#' Creates Neuston tow summary table
+#'
+#' Creates two tables - one for overview and the second for nekton data
+#'
+#' @param filename Path of the file to be read in
+#' @param saveLoc Folder to save the output
+#' @export
+#' @examples
+#' tableNeuston)
+tableNeuston <- function(filename,saveLoc = "~/Desktop") {
+
   file <- tail(strsplit(filename,'/')[[1]],1)
   ext <- tools::file_ext(file)
 
@@ -301,9 +330,9 @@ tableNeuston <- function(filename,output=T,saveLoc = "~/Desktop",which=c(1,2)) {
   thirdRow <- c('','','','','','','[Volts]','','[mL]','[$uL/m^2$]')
   SigF <- c(20,20,20,20,0,1,2,2,0,1,2)
   caption <- paste0("\\label{neuston1} Neuston tow hydrographic data for SEA Cruise ",cruiseID,". Locations as in Table \\ref{stationSummary}")
-  
+
   fileout <- file.path(saveLoc,gsub(paste0(".",ext),'_1.tex',file))
-  
+
   printTable(dfo,caption=caption,SigF=SigF,secondRow=secondRow,thirdRow=thirdRow,fileout=fileout)
 
   # NEKTON
@@ -318,7 +347,7 @@ tableNeuston <- function(filename,output=T,saveLoc = "~/Desktop",which=c(1,2)) {
                     Nekt=as.numeric(df[,grep("Total.*Nekton.*ml",names(df))]),
                     Gel=as.numeric(df[,grep("Gelat.*ml",names(df))]),
                     stringsAsFactors = F)
-  
+
   colnames(dfo) <- c('Station','Phyl','Lept','Halo','Myct','Plastic Pellets','Plastic Pieces','Tar','Nekton > 2cm','Gelatinous > 2cm')
   secondRow <- c('','[\\#]','[\\#]','[\\#]','[\\#]','[\\#]','[\\#]','[\\#]','[mL]','[mL]')
   SigF <- c(20,20,0,0,0,0,0,0,0,1,1)
@@ -330,18 +359,24 @@ tableNeuston <- function(filename,output=T,saveLoc = "~/Desktop",which=c(1,2)) {
 
 
 
-####### 
-# 100 COUNT
-#######
-table100Count <- function(filename,output=T,saveLoc = "~/Desktop") {
-  
+#' Creates 100 count data summary table
+#'
+#' Creates table in two parts due to length of dataset
+#'
+#' @param filename Path of the file to be read in
+#' @param saveLoc Folder to save the output
+#' @export
+#' @examples
+#' table100Count()
+table100Count <- function(filename,saveLoc = "~/Desktop") {
+
   file <- tail(strsplit(filename,'/')[[1]],1)
   ext <- tools::file_ext(file)
-  
+
   dfn <- readSEAxls(filename,rplcsv = T,sheet=2)
   df <- readSEAxls(filename,rplcsv = T,sheet=2,skip=1)
   names(df) <- gsub(' ','.',names(dfn)[1:dim(df)[2]])
-  
+
   Time <- df[,grep('Time',names(df))[1]]
   Time <- format(Time,format="%H:%M")
   Date <- format(df$Date,format="%Y-%m-%d")
@@ -371,12 +406,12 @@ table100Count <- function(filename,output=T,saveLoc = "~/Desktop") {
   SigF <- rep(0,ncol(dfo)+1)
   caption <-paste0("\\label{100count1} Zooplankton 100 count data for SEA Cruise ",cruiseID," (part 1). Locations as in Table \\ref{stationSummary}")
   fileout <- file.path(saveLoc,gsub(paste0(".",ext),'_100Count_1.tex',file))
-  
+
   printTable(dfo,caption=caption,SigF=SigF,secondRow=secondRow,fileout=fileout)
-  
+
 
   ### SECOND PART
-  
+
   Other <- as.numeric(rowSums(df[,grep("^Other$",names(df))],na.rm=T))
   dfo <- data.frame(Station=df$Station,
                     Date=Date,
@@ -394,7 +429,7 @@ table100Count <- function(filename,output=T,saveLoc = "~/Desktop") {
                     Other=Other,
                     Shan=as.numeric(df[,grep("Shannon",names(df))]),
                     stringsAsFactors = F)
-  
+
   cn <- colnames(dfo)
   cn[grep('Fishe',cn)] <- 'Fish'
   cn[grep('Shan',cn)] <- 'Shannon-Weiner'
@@ -410,32 +445,32 @@ table100Count <- function(filename,output=T,saveLoc = "~/Desktop") {
 
   fileout <- file.path(saveLoc,gsub(paste0(".",ext),'_100Count_2.tex',file))
   printTable(dfo,caption=caption,SigF=SigF,secondRow=secondRow,fileout=fileout)
-  
+
 }
 
 
-# 
-# 
-# 
-# 
+# FIXME: Everything after this needs reworking.
+#
+#
+#
 # ## METER NET
 # filename <-  paste0(cruiseID,'_meterwork.xlsm')
 # system(paste('xlsx2csv',file.path(shipfold,filename),'-s 1 >',file.path(outfold,gsub('.xlsm','_1.csv',filename)),sep=' '))
 # system(paste('xlsx2csv',file.path(shipfold,filename),'-s 2 >',file.path(outfold,gsub('.xlsm','_2.csv',filename)),sep=' '))
-# 
-# 
-# 
-# 
+#
+#
+#
+#
 # # METER NET OVERVIEW
 # df <- read.csv(file.path(outfold,gsub('.xlsm','_1.csv',filename)),stringsAsFactors = F)
 # nrows <- which(nchar(as.character(df$Station))==0)[1]-1
 # df <- df[1:nrows,]
 # df$Date <- gsub('\\[\\$-409\\]','',df$Date)
-# 
+#
 # Time <- df$Time
 # Time[!grepl(':',Time)] <- paste0('00:',gsub(' ','0',format(round(as.numeric(Time[!grepl(':',Time)])*1440),width=2)))
-# 
-# 
+#
+#
 # dfo <- data.frame(Station=df$Station,
 #                   Date=df$Date,
 #                   Time=Time,
@@ -447,15 +482,15 @@ table100Count <- function(filename,output=T,saveLoc = "~/Desktop") {
 #                   TowV=df$Tow.Volume..m3.,
 #                   BioV=df$Zoop.Biomass..ml.,
 #                   Den=as.numeric(df$Zpl.Density..ml.m3.)*1000)
-# 
+#
 # colnames(dfo) <- c('Station','Date','Time','Temperature','Salinity','Chl-a','Tow','Tow','Tow','Zooplankton','Zooplankton')
 # secondRow <-c('','','(local)','[degC]','','Fluoroesence','Depth','Length','Volume','Biovolume','Density')
-# thirdRow <- c('','','','','','[Volts]','[m]','[m]','[$m^3]','[mL]','[$uL/m^3$]') 
-# SigF <- c(20,20,20,20,1,2,2,0,0,1,1,2) 
-# outTable<-xtable(dfo,caption = paste0("\\label{meter1} 1-meter and 2-meter net tow hydrographic data for SEA Cruise ",cruiseID,". Locations as in Table \\ref{stationSummary}"))  
+# thirdRow <- c('','','','','','[Volts]','[m]','[m]','[$m^3]','[mL]','[$uL/m^3$]')
+# SigF <- c(20,20,20,20,1,2,2,0,0,1,1,2)
+# outTable<-xtable(dfo,caption = paste0("\\label{meter1} 1-meter and 2-meter net tow hydrographic data for SEA Cruise ",cruiseID,". Locations as in Table \\ref{stationSummary}"))
 # align(outTable) <- rep("c", ncol(dfo)+1)
 # digits(outTable) <- SigF
-# 
+#
 # add.to.row <- list(pos = list(0), command = NULL)
 # command <- paste0(paste0(paste(secondRow,collapse=' & ')," \\\\ \n"),
 #                   paste0(paste(thirdRow,collapse=' & ')," \\\\ \n"),
@@ -478,23 +513,23 @@ table100Count <- function(filename,output=T,saveLoc = "~/Desktop") {
 # #                   "\\endfoot\n",
 # #                   "\\endlastfoot\n")
 # add.to.row$command <- command
-# 
+#
 # a<-print(outTable, hline.after=c(0), add.to.row = add.to.row,
 #          tabular.environment = "longtable",
 #          floating=F,
 #          include.rownames = FALSE,
 #          caption.placement = 'top')
-# 
+#
 # fileout <- gsub(paste0(cruiseID,'_'),'',gsub('.xlsm','_1.tex',filename))
 # fileConn<-file(file.path(tablefold,fileout))
 # writeLines(a, fileConn)
 # close(fileConn)
-# 
-# 
-# 
-# 
+#
+#
+#
+#
 # # NEKTON
-# 
+#
 # dfo <- data.frame(Station=df$Station,
 #                   Phyl=df$Phyllosoma..,
 #                   Lept=df$Leptocephali..,
@@ -505,15 +540,15 @@ table100Count <- function(filename,output=T,saveLoc = "~/Desktop") {
 #                   Tar=df$Tar,
 #                   Nekt=df$Total.Nekton.ml,
 #                   Gel=df$Geltanious.ml)
-# 
+#
 # colnames(dfo) <- c('Station','Phyl','Lept','Halo','Myct','Plastic Pellets','Plastic Pieces','Tar','Nekton > 2cm','Gelatinous > 2cm')
 # secondRow <- c('','[\\#]','[\\#]','[\\#]','[\\#]','[\\#]','[\\#]','[\\#]','[mL]','[mL]')
-# SigF <- c(20,20,0,0,0,0,0,0,0,1,1) 
-# 
-# outTable<-xtable(dfo,caption = paste0("\\label{meter2} 1-meter and 2-meter net tow biological data for SEA Cruise ",cruiseID,". Locations as in Table \\ref{stationSummary}"))  
+# SigF <- c(20,20,0,0,0,0,0,0,0,1,1)
+#
+# outTable<-xtable(dfo,caption = paste0("\\label{meter2} 1-meter and 2-meter net tow biological data for SEA Cruise ",cruiseID,". Locations as in Table \\ref{stationSummary}"))
 # align(outTable) <- rep("c", ncol(dfo)+1)
 # digits(outTable) <- SigF
-# 
+#
 # add.to.row <- list(pos = list(0), command = NULL)
 # command <- paste0(paste0(paste(secondRow,collapse=' & ')," \\\\ \n"),
 #                   "\\hline\\n\\endfirsthead\n",
@@ -533,23 +568,23 @@ table100Count <- function(filename,output=T,saveLoc = "~/Desktop") {
 # #                   "\\endfoot\n",
 # #                   "\\endlastfoot\n")
 # add.to.row$command <- command
-# 
+#
 # a<-print(outTable, hline.after=c(0), add.to.row = add.to.row,
 #          tabular.environment = "longtable",
 #          floating=F,
 #          include.rownames = FALSE,
 #          caption.placement = 'top')
-# 
+#
 # fileout <- gsub(paste0(cruiseID,'_'),'',gsub('.xlsm','_2.tex',filename))
 # fileConn<-file(file.path(tablefold,fileout))
 # writeLines(a, fileConn)
 # close(fileConn)
-# 
-# 
+#
+#
 
 
 # ## PHYTONETS
-# 
+#
 # filename <-  paste0(cruiseID,'_phytowork.xlsm')
 # if(file.exists(filename)) {
 #   system(paste('xlsx2csv',file.path(shipfold,filename),file.path(outfold,gsub('.xlsm','.csv',filename)),sep=' '))
@@ -559,8 +594,8 @@ table100Count <- function(filename,output=T,saveLoc = "~/Desktop") {
 #   df$Date <- gsub('\\[\\$-409\\]','',df$Date)
 #   Time <- df$Time
 #   Time[!grepl(':',Time)] <- paste0('00:',gsub(' ','0',format(round(as.numeric(Time[!grepl(':',Time)])*1440),width=2)))
-#   
-#   
+#
+#
 #   dfo <- data.frame(Station=df$Station,
 #                     Date=df$Date,
 #                     Time=Time,
@@ -570,15 +605,15 @@ table100Count <- function(filename,output=T,saveLoc = "~/Desktop") {
 #                     dia=df$X..Diatoms*100,
 #                     din=df$X..Dinoflagellates*100,
 #                     oth=df$X..Other*100)
-#   
+#
 #   colnames(dfo) <- c('Station','Date','Time','Temperature','Salinity','Chl-a Fluoroesence','Diatom','Dinoflagellate','Other')
 #   secondRow <- c('','','(local)','[degC]','','[Volts]','[\\%]','[\\%]','[\\%]')
-#   SigF <- c(20,20,20,20,1,2,2,0,0,0) 
-#   
-#   outTable<-xtable(dfo,caption = paste0("\\label{phytowork} Phytoplankton net data for ",cruiseID,". Locations as in Table \\ref{stationSummary}"))  
+#   SigF <- c(20,20,20,20,1,2,2,0,0,0)
+#
+#   outTable<-xtable(dfo,caption = paste0("\\label{phytowork} Phytoplankton net data for ",cruiseID,". Locations as in Table \\ref{stationSummary}"))
 #   align(outTable) <- rep("c", ncol(dfo)+1)
 #   digits(outTable) <- SigF
-#   
+#
 #   add.to.row <- list(pos = list(0), command = NULL)
 #   command <- paste0(paste0(paste(secondRow,collapse=' & ')," \\\\ \n"),
 #                     "\\hline\\n\\endfirsthead\n",
@@ -598,35 +633,35 @@ table100Count <- function(filename,output=T,saveLoc = "~/Desktop") {
 #   #                   "\\endfoot\n",
 #   #                   "\\endlastfoot\n")
 #   add.to.row$command <- command
-#   
+#
 #   a<-print(outTable, hline.after=c(0), add.to.row = add.to.row,
 #            tabular.environment = "longtable",
 #            floating=F,
 #            include.rownames = FALSE,
 #            caption.placement = 'top')
-#   
+#
 #   fileout <- gsub(paste0(cruiseID,'_'),'',gsub('.xlsm','.tex',filename))
 #   fileConn<-file(file.path(tablefold,fileout))
 #   writeLines(a, fileConn)
 #   close(fileConn)
-# 
+#
 # }
-# 
+#
 # ## SHIPEK
-# 
+#
 # filename <-  paste0(cruiseID,'_shipekwork.xlsm')
-# 
+#
 # if(file.exists(filename)) {
 #   system(paste('xlsx2csv',file.path(shipfold,filename),file.path(outfold,gsub('.xlsm','.csv',filename)),sep=' '))
 #   df <- read.csv(file.path(outfold,gsub('.xlsm','.csv',filename)),stringsAsFactors = F)
 #   lasti <- which(df$Date=='')[1]-1
 #   df <- df[1:lasti,]
 #   df$Date <- gsub('\\[\\$-409\\]','',df$Date)
-#   
+#
 #   Time <- df$Time
 #   Time[!grepl(':',Time)] <- paste0('00:',gsub(' ','0',format(round(as.numeric(Time[!grepl(':',Time)])*1440),width=2)))
-#   
-#   
+#
+#
 #   dfo <- data.frame(Station=df$Station,
 #                     Date=df$Date,
 #                     Time=Time,
@@ -635,15 +670,15 @@ table100Count <- function(filename,output=T,saveLoc = "~/Desktop") {
 #                     Chla=df$Fluoro...chl.a.,
 #                     dep=df$Bottom.Depth..m.,
 #                     comm=df$Comments)
-#   
+#
 #   colnames(dfo) <- c('Station','Date','Time','Temperature','Salinity','Chl-a Fluoro','Depth','Comments')
 #   secondRow <- c('','','(local)','[degC]','','[Volts]','[m]','')
-#   SigF <- c(20,20,20,20,1,2,2,0,0) 
-#   
-#   outTable<-xtable(dfo,caption = paste0("\\label{shipek} Shipek grab data for SEA Cruise ",cruiseID,". Locations as in Table \\ref{stationSummary}"))  
+#   SigF <- c(20,20,20,20,1,2,2,0,0)
+#
+#   outTable<-xtable(dfo,caption = paste0("\\label{shipek} Shipek grab data for SEA Cruise ",cruiseID,". Locations as in Table \\ref{stationSummary}"))
 #   align(outTable) <- rep("c", ncol(dfo)+1)
 #   digits(outTable) <- SigF
-#   
+#
 #   add.to.row <- list(pos = list(0), command = NULL)
 #   command <- paste0(paste0(paste(secondRow,collapse=' & ')," \\\\ \n"),
 #                     "\\hline\\n\\endfirsthead\n",
@@ -663,13 +698,13 @@ table100Count <- function(filename,output=T,saveLoc = "~/Desktop") {
 #   #                   "\\endfoot\n",
 #   #                   "\\endlastfoot\n")
 #   add.to.row$command <- command
-#   
+#
 #   a<-print(outTable, hline.after=c(0), add.to.row = add.to.row,
 #            tabular.environment = "longtable",
 #            floating=F,
 #            include.rownames = FALSE,
 #            caption.placement = 'top')
-#   
+#
 #   fileout <- gsub(paste0(cruiseID,'_'),'',gsub('.xlsm','.tex',filename))
 #   fileConn<-file(file.path(tablefold,fileout))
 #   writeLines(a, fileConn)
