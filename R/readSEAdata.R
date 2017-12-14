@@ -271,20 +271,40 @@ readSEAadcp_all <- function(foldin) {
 #' df <- readSEAxls(system.file('extdata','S275_Neuston.xlsm',package='sea'))
 #'
 readSEAxls <- function(filein,skip=0,sheet=1,rplcsv=FALSE) {
+  # Determine the extension of the file
+  # NB: these can be different between Cramer and Seamans
   ext <- tools::file_ext(filein)
+
+  # create csv output filename
   filecsv <- gsub(ext,"csv",filein)
+
+  # Checks to see if a csv file already exists or if rplcsv == T
+  # If it doesn't or the function is forced to rewrite then readxl package
+  # used to read the excel file and output to csv file in same folder. Otherwise
+  # we just read in the csv file [quicker]
   if(!file.exists(filecsv) | rplcsv==TRUE) {
+    # Read in the excel file
     df<-readxl::read_excel(filein,sheet=sheet,skip=skip)
+
+    # SEA excel files often have unused extra row so we have to remove them
     nrows <- which(is.na(df[1]))[1]-1
     if(!is.na(nrows)) {
       df <- df[1:nrows,]
     }
+
+    # add a filename to df attributes
     attr(df,"filename") <- filein
+
+    # write the csv file to disk
     write.csv(df,filecsv,row.names = F)
+
   } else {
-    df <- read.csv(filecsv,stringsAsFactors = F)
+
+    # Read in csv file from folder where excel file exists
+    df <- readSEAcsv(filein)
     attr(df,"filename") <- filein
   }
+
   return(df)
 }
 
@@ -307,6 +327,7 @@ readSEAxls <- function(filein,skip=0,sheet=1,rplcsv=FALSE) {
 #'
 readSEAcsv <- function(filein) {
   df <- read.csv(filein,stringsAsFactors = F)
+  attr(df,"filename") <- filein
   return(df)
 }
 
