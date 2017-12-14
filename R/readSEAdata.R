@@ -2,7 +2,6 @@
 # Read SEA data types
 #######
 
-
 #' A function that reads in all .cnv files from a directory
 #'
 #' @param foldin input folder path
@@ -250,6 +249,8 @@ readSEAadcp_all <- function(foldin) {
 
 
 
+
+
 #' Read in SEA data from an Excel spreadsheet
 #'
 #' Function used commonly as much data entry and organization is acheived in this format
@@ -266,7 +267,8 @@ readSEAadcp_all <- function(foldin) {
 #' @keywords
 #' @export
 #' @examples
-#' readSEAxls()
+#' # Read in an example neuston datasheet
+#' df <- readSEAxls(system.file('extdata','S275_Neuston.xlsm',package='sea'))
 #'
 readSEAxls <- function(filein,skip=0,sheet=1,rplcsv=FALSE) {
   ext <- tools::file_ext(filein)

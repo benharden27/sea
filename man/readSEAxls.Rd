@@ -25,6 +25,7 @@ Notes: Requires readxl package. readxl is slower than read.table so the function
 a .csv file of the output for quicker reading next time. Can be overridded using rplcsv.
 }
 \examples{
-readSEAxls()
+# Read in an example neuston datasheet
+df <- readSEAxls(system.file('extdata','S275_Neuston.xlsm',package='sea'))
 
 }
