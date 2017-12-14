@@ -283,6 +283,7 @@ readSEAxls <- function(filein,skip=0,sheet=1,rplcsv=FALSE) {
   # used to read the excel file and output to csv file in same folder. Otherwise
   # we just read in the csv file [quicker]
   if(!file.exists(filecsv) | rplcsv==TRUE) {
+
     # Read in the excel file
     df<-readxl::read_excel(filein,sheet=sheet,skip=skip)
 
@@ -301,8 +302,9 @@ readSEAxls <- function(filein,skip=0,sheet=1,rplcsv=FALSE) {
   } else {
 
     # Read in csv file from folder where excel file exists
-    df <- readSEAcsv(filein)
+    df <- readSEAcsv(filecsv)
     attr(df,"filename") <- filein
+
   }
 
   return(df)

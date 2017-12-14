@@ -502,11 +502,11 @@ plotSEAct <- function(df,type='elg',bathy=T,stations=NULL,reg="") {
     latran = range(lat,na.rm=T)
     lonlim <- lonran + c(-10,10)
     latlim <- latran + c(-10,10)
-    topo <- subset(topo, latlim[1] < latitude & latitude < latlim[2])
+    topo <- oce::subset(topo, latlim[1] < latitude & latitude < latlim[2])
     if(lonran[2]>180) {
       topo@data$longitude <- topo@data$longitude + 360
     }
-    topo <- subset(topo, lonlim[1] < longitude & longitude < lonlim[2])
+    topo <- oce::subset(topo, lonlim[1] < longitude & longitude < lonlim[2])
     if(lonran[2]<180) {
       topo@data$longitude <- topo@data$longitude + 360
     }
@@ -661,11 +661,11 @@ plotSEAelg <- function(df,vars=c(1,2,3,4),step=60,reg="",bathy=T) {
     latran = range(df$lat,na.rm=T)
     lonlim <- lonran + c(-10,10) #-360?
     latlim <- latran + c(-10,10)
-    topo <- subset(topo, latlim[1] < latitude & latitude < latlim[2])
+    topo <- oce::subset(topo, latlim[1] < latitude & latitude < latlim[2])
     if(lonran[2]>180) {
       topo@data$longitude <- topo@data$longitude + 360
     }
-    topo <- subset(topo, lonlim[1] < longitude & longitude < lonlim[2])
+    topo <- oce::subset(topo, lonlim[1] < longitude & longitude < lonlim[2])
     if(lonran[2]<180) {
       topo@data$longitude <- topo@data$longitude + 360
     }
