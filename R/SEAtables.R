@@ -102,6 +102,8 @@ tableStatSum <- function(filename,saveLoc = "~/Desktop") {
   df$Shipek.Grab <- substr(gsub('[0-9]','X',gsub('0','',as.character(rowSums((!is.na(df[,xi]))+0)))),1,1)
   xi <- sort(append(grep('Phyto',names(df)),grep('Phyto',names(df))+1))
   df$Phyto.Net <- substr(gsub('[A-Z0-9]','X',gsub('0','',as.character(rowSums((!is.na(df[,xi]))+0)))),1,1)
+  xi <- sort(append(grep('Hydrophone',names(df)),grep('Hydrophone',names(df))+1))
+  df$hydrophone <- substr(gsub('[A-Z0-9]','X',gsub('0','',as.character(rowSums((!is.na(df[,xi]))+0)))),1,1)
 
 
   Time <- df[,grep('Start',names(df))[1]]
@@ -121,11 +123,12 @@ tableStatSum <- function(filename,saveLoc = "~/Desktop") {
                     CTD = toupper(df$Free.CTD),
                     RBR = toupper(df$RBR),
                     SG = toupper(df$Shipek.Grab),
+                    HP = toupper(df$hydrophone),
                     SS = df$Surface.Station,
                     genLoc = df$General.Locale,
                     stringsAsFactors =F)
 
-  colnames(dfo) <- c('Station','Date','Time','Longitude','Latitude','NT','MN','PN','HC','CTD','RBR','SG','SS','General Locale')
+  colnames(dfo) <- c('Station','Date','Time','Longitude','Latitude','NT','MN','PN','HC','CTD','RBR','SG','HP','SS','General Locale')
 
   dfo<- dfo[!sapply(dfo, function (k) all(k==''))]
   caption <- paste0("\\label{stationSummary} Summary of oceanographic sampling stations for SEA Cruise ",cruiseID,". [",dim(dfo)[1]," Stations]")
@@ -412,7 +415,7 @@ table100Count <- function(filename,saveLoc = "~/Desktop") {
 
   ### SECOND PART
 
-  Other <- as.numeric(rowSums(df[,grep("^Other$",names(df))],na.rm=T))
+  Other <- as.numeric(rowSums(df[,grep("^Other$|^Other[_]+",names(df))],na.rm=T))
   dfo <- data.frame(Station=df$Station,
                     Date=Date,
                     Time=Time,
