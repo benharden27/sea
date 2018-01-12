@@ -287,6 +287,13 @@ readSEAxls <- function(filein,skip=0,sheet=1,rplcsv=FALSE) {
     # Read in the excel file
     df<-readxl::read_excel(filein,sheet=sheet,skip=skip)
 
+    # Convert from Tibble [FIX: work out if tibble is prefereable]
+    df <- as.data.frame(df)
+
+    # Add dots to names
+    names(df) <- sub(" ",".",names(df))
+
+
     # SEA excel files often have unused extra row so we have to remove them
     nrows <- which(is.na(df[1]))[1]-1
     if(!is.na(nrows)) {
