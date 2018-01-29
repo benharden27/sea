@@ -485,7 +485,7 @@ plotSEAcurr <- function(X,stp=6,scale=0.2,plotKEY=T,reg="") {
 #' @export
 #' @examples
 #' plotSEAct()
-plotSEAct <- function(df,type='elg',bathy=T,stations=NULL,reg="") {
+plotSEAct <- function(df,type='elg',bathy=T,stations=NULL,reg="",coastline="fine") {
   if(type=='elg') {
     lon <- df$lon
     lat <- df$lat
@@ -523,8 +523,15 @@ plotSEAct <- function(df,type='elg',bathy=T,stations=NULL,reg="") {
   }
 
 
+  if(coastline=="regular"){
+    data("coastlineWorld")
+    coastdata <- coastlineWorld
+  } else {
+    data("coastlineWorldFine")
+    coastdata <- coastlineWorldFine
+  }
   par(mar=c(3, 3, 1, 1),mgp=getOption("oceMgp"))
-  mapPlot(coastlineWorldFine,proj="+proj=merc +lon_0=180",
+  mapPlot(coastdata,proj="+proj=merc +lon_0=180",
           latitudelim = latlim,
           longitudelim = lonlim,
           col='gray',axes=FALSE, grid=FALSE)
@@ -535,7 +542,7 @@ plotSEAct <- function(df,type='elg',bathy=T,stations=NULL,reg="") {
   }
   mapLines(lon,lat,col=1)
   if(bathy) {
-    mapPolygon(coastlineWorldFine,col='gray')
+    mapPolygon(coastdata,col='gray')
   }
   mapGrid(longitude=lonlabels, latitude=latlabels)
   mapAxis(longitude=lonlabels, latitude=latlabels)

@@ -210,7 +210,6 @@ readSEAadcp <- function(filein) {
 }
 
 
-#' Read all adcp data files on a folder in the format exported before conversion to ODV
 #'
 #' As readSEAadcp, this needs to be updated to instread read directly from the .ENS files to skip steps in on-board processing
 #'
@@ -359,45 +358,38 @@ readSEAcsv <- function(filein) {
 #'
 readSEAelg <- function(filein,clean=T) {
 
-  df <- read.csv(filein,stringsAsFactors=F,colClasses = "character")
+  # Read in elg file using readr package (quicker than base)
+  # TODO: Check headers of elgs from both ships to see if we can prespecify column types
+  df <- read_csv(filein)
 
-  nlab <- length(which(df$GPS.lab.Lon==""))
-  nnav <- length(which(df$GPS.nav.Lon==""))
+  # Reasign names that have dashes in them to be referenced more easily
+  names(df) <- gsub("-",".",names(df))
 
-  if(nlab <= nnav) {
-    lonin <- df$GPS.lab.Lon
-    latin <- df$GPS.lab.Lat
+  # Data parsing
+  # Date and time
+  df$Date <- parse_date(df$Date,format="%m/%d/%Y")
+  df$GPS.nav.time <- parse_time(df$GPS.nav.time,format="%H%M%S")
+  df$GPS.lab.time <- parse_time(df$GPS.lab.time,format="%H%M%S")
+  df$dttm <- update(df$Date,hour=hour(df$Time),minute=minute(df$Time),second=second(df$Time))
+
+
+  # Location
+  df$GPS.lab.Lat <- parse_lat(df$GPS.lab.Lat)
+  df$GPS.lab.Lon <- parse_lon(df$GPS.lab.Lon)
+  df$GPS.nav.Lat <- parse_lat(df$GPS.nav.Lat)
+  df$GPS.nav.Lon <- parse_lon(df$GPS.nav.Lon)
+
+
+  nlab <- length(which(is.na(df$GPS.lab.Lon)))
+  nnav <- length(which(is.na(df$GPS.nav.Lon)))
+
+  if(nlab >= nnav) {
+    df$lon <- df$GPS.lab.Lon
+    df$lat <- df$GPS.lab.Lat
   } else {
-    lonin <- df$GPS.nav.Lon
-    latin <- df$GPS.nav.Lat
+    df$lon <- df$GPS.nav.Lon
+    df$lat <- df$GPS.nav.Lat
   }
-
-  df<-as.data.frame(sapply(df,type.convert))
-
-  len <- median(nchar(lonin),na.rm=T)
-  exp <- "[0-9]{5}.[0-9]{1-4}"
-  hemi <- ((substring(as.character(lonin),len,len)=='E')+0)*2-1
-  lon1 <- as.character(lonin)
-  lon1[nchar(lon1)!=len] <- NA
-  lon1 <- substring(lon1,1,len-1)
-  lon1[!1:length(lon1)%in%grep(exp,lon1)] <- NA
-  lon <- hemi*as.numeric(substring(lon1,1,3))+hemi*as.numeric(substring(lon1,4,20))/60
-
-  len <- median(nchar(latin),na.rm=T)
-  exp <- "[0-9]{4}.[0-9]{1-4}"
-  hemi = ((substring(as.character(latin),len,len)=='N')+0)*2-1
-  lat1 <- as.character(latin)
-  lat1[nchar(lat1)!=len] <- NA
-  lat1 <- substring(lat1,1,len-1)
-  lat1[!1:length(lat1)%in%grep(exp,lat1)] <- NA
-  lat <- hemi*as.numeric(substring(lat1,1,2))+hemi*as.numeric(substring(lat1,3,20))/60
-
-  nai <- !is.na(lat) & !is.na(lon)
-  lon <- lon[nai]
-  lat <- lat[nai]
-
-  df$lon <- lon
-  df$lat <- lat
 
   if(clean==T) {
     df$Tsal.temp <- despike(df$Tsal.temp)
@@ -410,6 +402,58 @@ readSEAelg <- function(filein,clean=T) {
   }
 
   return(df)
+
+}
+
+
+
+
+#' Parse lon from elg file
+#'
+#' @param lonin lonto process
+#' @keywords
+#' @export
+#' @examples
+#' parse_lon()
+#'
+parse_lon <- function(lonin) {
+
+  # TODO: replace substring with tidyverse equivelent
+  len <- median(nchar(lonin),na.rm=T)
+  exp <- "[0-9]{5}.[0-9]{1-4}"
+  hemi <- ((substring(as.character(lonin),len,len)=='E')+0)*2-1
+  lon1 <- as.character(lonin)
+  lon1[nchar(lon1)!=len] <- NA
+  lon1 <- substring(lon1,1,len-1)
+  lon1[!1:length(lon1)%in%grep(exp,lon1)] <- NA
+  lon <- hemi*as.numeric(substring(lon1,1,3))+hemi*as.numeric(substring(lon1,4,20))/60
+
+  return(lon)
+
+}
+
+
+#' Parse lat from elg file
+#'
+#' @param latin lat to process
+#' @keywords
+#' @export
+#' @examples
+#' parse_lat()
+#'
+parse_lat <- function(latin) {
+
+  # Replace substring with tidyverse equivelent
+  len <- median(nchar(latin),na.rm=T)
+  exp <- "[0-9]{4}.[0-9]{1-4}"
+  hemi = ((substring(as.character(latin),len,len)=='N')+0)*2-1
+  lat1 <- as.character(latin)
+  lat1[nchar(lat1)!=len] <- NA
+  lat1 <- substring(lat1,1,len-1)
+  lat1[!1:length(lat1)%in%grep(exp,lat1)] <- NA
+  lat <- hemi*as.numeric(substring(lat1,1,2))+hemi*as.numeric(substring(lat1,3,20))/60
+
+  return(lat)
 
 }
 

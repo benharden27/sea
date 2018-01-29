@@ -2,7 +2,7 @@
 % Please edit documentation in R/readSEAdata.R
 \name{readSEAadcp_all}
 \alias{readSEAadcp_all}
-\title{Read all adcp data files on a folder in the format exported before conversion to ODV}
+\title{As readSEAadcp, this needs to be updated to instread read directly from the .ENS files to skip steps in on-board processing}
 \usage{
 readSEAadcp_all(foldin)
 }
