@@ -485,7 +485,7 @@ plotSEAcurr <- function(X,stp=6,scale=0.2,plotKEY=T,reg="") {
 #' @export
 #' @examples
 #' plotSEAct()
-plotSEAct <- function(df,type='elg',bathy=T,stations=NULL,reg="",coastline="fine") {
+plotSEAct <- function(df,type='elg',bathy=T,stations=NULL,reg="",coastline="fine",legend = T) {
   if(type=='elg') {
     lon <- df$lon
     lat <- df$lat
@@ -551,7 +551,9 @@ plotSEAct <- function(df,type='elg',bathy=T,stations=NULL,reg="",coastline="fine
     mapPoints(stations$lon[stations$flag==2],stations$lat[stations$flag==2],pch=6,col=1)
     xloc = par('xaxp')[1]#+diff(par('xaxp')[1:2])/20
     yloc = par('yaxp')[2]#-diff(par('yaxp')[1:2])/20
-    legend(xloc,yloc,c('CTD','Neuston'),pch=c(2,6),col=c(2,1))
+    if(legend) {
+      legend(xloc,yloc,c('CTD','Neuston'),pch=c(2,6),col=c(2,1))
+    }
   }
 
 }

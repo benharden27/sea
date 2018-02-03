@@ -49,7 +49,7 @@ readSEActd <- function(foldin,newFL=T,CTDflag=NULL,plotFL=F,plotfold="~/Desktop/
         filerep <- paste0(strsplit(files[i],'[.]')[[1]][1],".png")
         outname <- file.path(plotfold,"ctds",filerep)
         png(filename=outname,height=7,width=7,units='in',res=300,type='cairo') # set up the png file to print to
-        plot(CTDs[[i]])
+        plot(CTDs[[i]],which=c(1,2,3,5))
         dev.off()
 
         filerep <- paste0(strsplit(files[i],'[.]')[[1]][1],"_aux.png")
@@ -96,18 +96,22 @@ readSEActd <- function(foldin,newFL=T,CTDflag=NULL,plotFL=F,plotfold="~/Desktop/
         abline(h = seq(at[1], at[2], length.out = at[3] + 1),
                lty=3,col="lightgray")
 
-        plot(CTDs[[i]]@data$oxygen,CTDs[[i]]@data$depth,
-             ylim=rev(pran),type='l',
-             ylab="Depth [m]",xlab="")
-        mtext("Oxygen",line=1,side=3,cex = par("cex"))
-        at <- par("xaxp")
-        abline(v = seq(at[1], at[2], length.out = at[3] + 1),
-               lty=3,col="lightgray")
-        at <- par("yaxp")
-        abline(h = seq(at[1], at[2], length.out = at[3] + 1),
-               lty=3,col="lightgray")
+        # Oxygen
+        oxyslot <- grep("oxygen",names(CTDs[[i]]@data))[1]
+        if(!is.na(oxyslot)) {
+          plot(CTDs[[i]]@data[[oxyslot]],CTDs[[i]]@data$depth,
+               ylim=rev(pran),type='l',
+               ylab="Depth [m]",xlab="")
+          mtext("Oxygen",line=1,side=3,cex = par("cex"))
+          at <- par("xaxp")
+          abline(v = seq(at[1], at[2], length.out = at[3] + 1),
+                 lty=3,col="lightgray")
+          at <- par("yaxp")
+          abline(h = seq(at[1], at[2], length.out = at[3] + 1),
+                 lty=3,col="lightgray")
 
-        dev.off()
+          dev.off()
+        }
       }
 
     }
@@ -365,20 +369,32 @@ readSEAelg <- function(filein,clean=T) {
   # Reasign names that have dashes in them to be referenced more easily
   names(df) <- gsub("-",".",names(df))
 
-  # Data parsing
-  # Date and time
-  df$Date <- parse_date(df$Date,format="%m/%d/%Y")
-  df$GPS.nav.time <- parse_time(df$GPS.nav.time,format="%H%M%S")
-  df$GPS.lab.time <- parse_time(df$GPS.lab.time,format="%H%M%S")
-  df$dttm <- update(df$Date,hour=hour(df$Time),minute=minute(df$Time),second=second(df$Time))
 
+  # Date and time parsing
+  df$Time <- parse_time(df$Time)
+  df$Date <- parse_date(df$Date,format="%m/%d/%Y")
+  df$Sys_dttm <- update(df$Date,hour=hour(df$Time),minute=minute(df$Time),second=second(df$Time))
+
+  if(hasName(df,"GPS.nav.time")) {
+    df$GPS.nav.time <- parse_time(df$GPS.nav.time,format="%H%M%S")
+    difft <- df$GPS.nav.time - df$Time
+    rmdifft <- runmed(difft,11)
+    difft[abs(difft)>abs(rmdifft)] <- rmdifft[abs(difft)>abs(rmdifft)]
+    df$GPS.nav.dttm <- df$Sys_dttm+difft
+  }
+  if(hasName(df,"GPS.lab.time")) {
+    df$GPS.lab.time <- parse_time(df$GPS.lab.time,format="%H%M%S")
+    difft <- df$GPS.lab.time - df$Time
+    rmdifft <- runmed(difft,11)
+    difft[abs(difft)>abs(rmdifft)] <- rmdifft[abs(difft)>abs(rmdifft)]
+    df$GPS.lab.dttm <- df$Sys_dttm+difft
+  }
 
   # Location
   df$GPS.lab.Lat <- parse_lat(df$GPS.lab.Lat)
   df$GPS.lab.Lon <- parse_lon(df$GPS.lab.Lon)
   df$GPS.nav.Lat <- parse_lat(df$GPS.nav.Lat)
   df$GPS.nav.Lon <- parse_lon(df$GPS.nav.Lon)
-
 
   nlab <- length(which(is.na(df$GPS.lab.Lon)))
   nnav <- length(which(is.na(df$GPS.nav.Lon)))
@@ -506,7 +522,8 @@ readLatLon <- function(filein) {
   lat <- lat[lat!=""] # removes blank sections
 
   # Define Hemisphere
-  hemi <- substr(r[line],regexpr("[NS]",r[line]),regexpr("[NS]",r[line]));
+  # hemi <- substr(r[line],regexpr("[NS]",r[line]),regexpr("[NS]",r[line]))
+  hemi <- substr(r[line],regexpr("[NS].{0,5}$",r[line]),regexpr("[NS].{0,5}$",r[line]))
   if(hemi=='S'){
     fac <- -1
   } else {
@@ -552,7 +569,8 @@ readLatLon <- function(filein) {
   lon <- lon[lon!=""] # removes blank sections
 
   # Define Hemisphere
-  hemi <- substr(rest,regexpr("[EW]",rest),regexpr("[WE]",rest));
+  # hemi <- substr(rest,regexpr("[WE]",rest),regexpr("[WE]",rest));
+  hemi <- substr(rest,regexpr("[WE].{0,5}$",rest),regexpr("[WE].{0,5}$",rest));
   if(hemi=='W'){
     fac <- -1
   } else {

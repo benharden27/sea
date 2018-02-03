@@ -5,7 +5,7 @@
 \title{Plots map of cruise track}
 \usage{
 plotSEAct(df, type = "elg", bathy = T, stations = NULL, reg = "",
-  coastline = "fine")
+  coastline = "fine", legend = T)
 }
 \arguments{
 \item{df}{data frame generated either by readSEAxls or readSEAelgthat contains GPS data}
