@@ -4,7 +4,7 @@
 \alias{plotSEAbio}
 \title{Plot biomass distribution from neustron tows data}
 \usage{
-plotSEAbio(df, legloc = "topleft")
+plotSEAbio(df, legloc = "topleft", mapPad = 0.1)
 }
 \arguments{
 \item{df}{data frame created by using readSEAxls() on <cruiseID_Neuston.xls>.}

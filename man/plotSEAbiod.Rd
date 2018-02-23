@@ -4,7 +4,7 @@
 \alias{plotSEAbiod}
 \title{Plot biodiveristy distribution from neustron tows data}
 \usage{
-plotSEAbiod(df, legloc = "topleft")
+plotSEAbiod(df, legloc = "topleft", mapPad = 0.1)
 }
 \arguments{
 \item{df}{data frame created by using readSEAxls() on <cruiseID_Neuston.xls>.}

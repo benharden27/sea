@@ -169,7 +169,7 @@ reg2latlon <- function(reg='') {
 #' @export
 #' @examples
 #' plotSEAplastic()
-plotSEAplastic <- function(df,legloc='topleft') {
+plotSEAplastic <- function(df,legloc='topleft',mapPad = 0.1) {
   ii <- grep('Plastic',names(df))
   Plas <- df[[ii[1]]] + df[[ii[2]]]
   lon <- df$LonDEC
@@ -177,8 +177,8 @@ plotSEAplastic <- function(df,legloc='topleft') {
   lon[lon<0] <- lon[lon<0]+360
 
   mapPlot(coastlineWorldFine,proj="+proj=merc +lon_0=180",
-          latitudelim = range(lat,na.rm=T)+c(-2,2),
-          longitudelim = range(lon,na.rm=T)+c(-2,2),
+          latitudelim = range(lat,na.rm=T)+diff(range(lat,na.rm=T))*c(-mapPad,mapPad),
+          longitudelim = range(lon,na.rm=T)+diff(range(lon,na.rm=T))*c(-mapPad,mapPad),
           col='gray',axes=FALSE, grid=FALSE)
   latlabels <- seq(-90, 0, 5)
   lonlabels <- c(seq(0, 175, 5), seq(-180, 0, 5))
@@ -225,7 +225,7 @@ plotSEAplastic <- function(df,legloc='topleft') {
   # mapPoints(lon,lat,pch=20,cex=0.4)
   legend(x=legloc,legend = format(legnum,digits=1,scientific=F),
          pch=21,pt.cex=legpl,x.intersp=2,y.intersp=2,inset=0.05,
-         title='Plastic Pieces',bty='n')
+         title=' Plastic ',bty='o')
 
 
 }
@@ -239,7 +239,7 @@ plotSEAplastic <- function(df,legloc='topleft') {
 #' @export
 #' @examples
 #' plotSEAbio()
-plotSEAbio <- function(df,legloc='topleft') {
+plotSEAbio <- function(df,legloc='topleft',mapPad=0.1) {
 
   Time <- df$Time.In
   if(is.null(Time)) {
@@ -263,8 +263,8 @@ plotSEAbio <- function(df,legloc='topleft') {
 
   Ni <- tod>0.75 | tod<0.25
 
-  latlim <- range(lat,na.rm=T) + c(-diff(range(lat,na.rm=T))/10,diff(range(lat,na.rm=T))/10)
-  lonlim <- range(lon,na.rm=T) + c(-diff(range(lon,na.rm=T))/10,diff(range(lon,na.rm=T))/10)
+  latlim <- range(lat,na.rm=T) + c(-diff(range(lat,na.rm=T))*mapPad,diff(range(lat,na.rm=T))*mapPad)
+  lonlim <- range(lon,na.rm=T) + c(-diff(range(lon,na.rm=T))*mapPad,diff(range(lon,na.rm=T))*mapPad)
   par(mar=c(3, 3, 1, 1),mgp=getOption("oceMgp"))
   mapPlot(coastlineWorldFine,proj="+proj=merc +lon_0=180",
           latitudelim = latlim,
@@ -294,7 +294,7 @@ plotSEAbio <- function(df,legloc='topleft') {
   mapPoints(lon,lat,pch=20,cex=0.4)
   legend(x=legloc,legend = format(legnum,digits=1,scientific=F),
          pch=21,pt.cex=legpl,x.intersp=2,y.intersp=2,inset=0.05,
-         title=expression(uL/m^2),bty='n')
+         title=paste0("  ",expression(uL/m^2),"  "),bty='o')
 
 
 }
@@ -308,7 +308,7 @@ plotSEAbio <- function(df,legloc='topleft') {
 #' @export
 #' @examples
 #' plotSEAbiod()
-plotSEAbiod <- function(df,legloc='topleft') {
+plotSEAbiod <- function(df,legloc='topleft',mapPad=0.1) {
 
   Time <- df$Time.In
   if(is.null(Time)) {
@@ -332,8 +332,8 @@ plotSEAbiod <- function(df,legloc='topleft') {
 
   Ni <- tod>0.75 | tod<0.25
 
-  latlim <- range(lat,na.rm=T) + c(-diff(range(lat,na.rm=T))/10,diff(range(lat,na.rm=T))/10)
-  lonlim <- range(lon,na.rm=T) + c(-diff(range(lon,na.rm=T))/10,diff(range(lon,na.rm=T))/10)
+  latlim <- range(lat,na.rm=T) + c(-diff(range(lat,na.rm=T))*mapPad,diff(range(lat,na.rm=T))*mapPad)
+  lonlim <- range(lon,na.rm=T) + c(-diff(range(lon,na.rm=T))*mapPad,diff(range(lon,na.rm=T))*mapPad)
   par(mar=c(3, 3, 1, 1),mgp=getOption("oceMgp"))
   mapPlot(coastlineWorldFine,proj="+proj=merc +lon_0=180",
           latitudelim = latlim,
@@ -350,7 +350,7 @@ plotSEAbiod <- function(df,legloc='topleft') {
   mapPoints(lon,lat,pch=20,cex=0.4)
   legend(x=legloc,legend = seq(0.2,1,0.2),
          pch=21,pt.cex=5*seq(0.2,1,0.2),x.intersp=2,y.intersp=2,inset=0.05,
-         title='Shannon-Weinner\n Diversity Index',bty='n')
+         title='Diversity',bty='o')
 }
 
 
@@ -406,10 +406,15 @@ plotSEAbiodn <- function(df) {
 #' @export
 #' @examples
 #' plotSEAcurr()
-plotSEAcurr <- function(X,stp=6,scale=0.2,plotKEY=T,reg="") {
+plotSEAcurr <- function(X,stp=6,scale=0.2,plotKEY=T,reg="",surf=F,plotCT=T) {
 
-  ubar <- rowMeans(X$u,na.rm=T)/10
-  vbar <- rowMeans(X$v,na.rm=T)/10
+  if(surf) {
+    ubar <- rowMeans(X$u[,1:5],na.rm=T)/10
+    vbar <- rowMeans(X$v[,1:5],na.rm=T)/10
+  } else {
+    ubar <- rowMeans(X$u,na.rm=T)/10
+    vbar <- rowMeans(X$v,na.rm=T)/10
+  }
   porti <- diff(geodDist(X$lon,X$lat,alongPath = T))<0.1
   ubar[porti] <- vbar[porti] <- X$lon[porti] <- X$lat[porti] <- NA
   X$lon <- X$lon[!porti]
@@ -445,7 +450,9 @@ plotSEAcurr <- function(X,stp=6,scale=0.2,plotKEY=T,reg="") {
   mapAxis(longitude=lonlabels, latitude=latlabels)
 
   ran <- seq(1,length(X$lon),stp)
-  mapLines(X$lon,X$lat,col=2)
+  if(plotCT) {
+    mapLines(X$lon,X$lat,col=2)
+  }
   cols<-colormap(ws)
   mapDirectionField(X$lon[ran],X$lat[ran],ubar[ran],vbar[ran],scale=scale,length=0.01)
 
@@ -464,7 +471,7 @@ plotSEAcurr <- function(X,stp=6,scale=0.2,plotKEY=T,reg="") {
     dllj <- dlli-(floor(dlli/2))
     dlli <- ceiling(dlli/2)
     a<-lonlat2map(lonran[dlli]+c(1,-1),latran[dllj]+c(.15,-.15))
-    rect(a$x[1],a$y[1],a$x[2],a$y[2],col=0)
+    # rect(a$x[1],a$y[1],a$x[2],a$y[2],col=0)
     mapDirectionField(lonran[dlli],latran[dllj],wslab,0,scale=scale,length=0.01)
     mapText(lonran[dlli],latran[dllj],paste(wslab,'cm/s'),pos=2)
 
@@ -658,7 +665,7 @@ plotSEAwind <- function(df,scale=0.2,stp=3,plotKEY=T,reg="") {
 #' @export
 #' @examples
 #' plotSEAelg()
-plotSEAelg <- function(df,vars=c(1,2,3,4),step=60,reg="",bathy=T) {
+plotSEAelg <- function(df,vars=c(1,2,3,4),step=60,reg="",bathy=T,new_elg=F) {
   data(coastlineWorld)
   data(coastlineWorldFine)
   par(mgp=getOption("oceMgp"))
@@ -688,7 +695,7 @@ plotSEAelg <- function(df,vars=c(1,2,3,4),step=60,reg="",bathy=T) {
   # which to plot?
   lenw <- length(vars)
   if(lenw==1) {rows = c(1,1)}
-  if(lenw==2) {rows = c(1,2)}
+  if(lenw==2) {rows = c(2,1)}
   if(lenw>2 & lenw<5) {rows = c(2,2)}
   if(lenw>4 & lenw<7) {rows = c(2,3)}
   if(lenw>6) {rows = c(3,3)}
@@ -707,26 +714,55 @@ plotSEAelg <- function(df,vars=c(1,2,3,4),step=60,reg="",bathy=T) {
   omar <- par('mar')
   for (i in vars) {
     if (i==1) {
-      z<-df$Tsal.temp[ti]
-      qua <- c(0.01,0.99)
+      if(new_elg){
+        z<-df$temp[ti]
+      } else {
+        z<-df$Tsal.temp[ti]
+      }
+
+      qua <- c(0.04,0.96)
       zl <- 'temperature [degC]'
       cm <- oce.colorsTemperature
     } else if (i==2) {
-      z<-df$Tsal.sal[ti]
+      if(new_elg) {
+        z <- df$sal[ti]
+      } else {
+        z<-df$Tsal.sal[ti]
+      }
       qua <- c(0.02,0.99)
       zl <- 'salinity'
       cm <- oce.colorsSalinity
     } else if (i==3) {
-      z<-df$Fluor.Chl.avg.60.min.Value[ti]
+      if(new_elg){
+        z <- df$fluor_60min[ti]
+      } else {
+        z<-df$Fluor.Chl.avg.60.min.Value[ti]
+      }
       qua <- c(0.01,0.97)
       zl <- 'chlorophyll-a fluorescence'
       cm <- oce.colorsChlorophyll
     } else if (i==4) {
-      ii <- grep('CDOM.*60',names(df))
-      z<-df[[ii]][ti]
+      if(new_elg) {
+        z <- df$CDOM_60min[ti]
+      } else {
+        ii <- grep('CDOM.*60',names(df))
+        z<-df[[ii]][ti]
+      }
+
       qua <- c(0.01,0.92)
       zl <- 'CDOM fluorescence'
       cm<-oce.colorsChlorophyll
+    } else if (i==5) {
+      if(new_elg) {
+        z <- df$xmiss_60min[ti]
+      } else {
+        ii <- grep('Trans.*60',names(df))
+        z<-df[[ii]][ti]
+      }
+
+      qua <- c(0.1,0.92)
+      zl <- 'Transmissivity'
+      cm<-oce.colorsDensity()
     }
 
     lonp <- df$lon[ti]

@@ -4,7 +4,7 @@
 \alias{plotSEAplastic}
 \title{Plot plastic distribution from neustron tows data}
 \usage{
-plotSEAplastic(df, legloc = "topleft")
+plotSEAplastic(df, legloc = "topleft", mapPad = 0.1)
 }
 \arguments{
 \item{df}{data frame created by using readSEAxls() on <cruiseID_Neuston.xls>.}

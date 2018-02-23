@@ -85,6 +85,8 @@ tableStatSum <- function(filename,saveLoc = "~/Desktop") {
 
   xi <- sort(append(grep('Meter.Net',names(df)),grep('Meter.Net',names(df))+1))
   df$Meter.Net <- substr(gsub('[0-9]','X',gsub('0','',as.character(rowSums((!is.na(df[,xi]))+0)))),1,1)
+  xi <- sort(append(grep('Secchi.Disk',names(df)),grep('Secchi.Disk',names(df))+1))
+  df$Secchi.Disk <- substr(gsub('[0-9]','X',gsub('0','',as.character(rowSums((!is.na(df[,xi]))+0)))),1,1)
   xi <- sort(append(grep('Hydrocast',names(df)),grep('Hydrocast',names(df))+1))
   df$Hydrocast <- substr(gsub('[0-9]','X',gsub('0','',as.character(rowSums((!is.na(df[,xi])&df[,xi]!='')+0)))),1,1)
   xi <- sort(append(grep('Free.CTD',names(df)),grep('Free.CTD',names(df))+1))
@@ -123,12 +125,13 @@ tableStatSum <- function(filename,saveLoc = "~/Desktop") {
                     CTD = toupper(df$Free.CTD),
                     RBR = toupper(df$RBR),
                     SG = toupper(df$Shipek.Grab),
+                    SD = toupper(df$Secchi.Disk),
                     HP = toupper(df$hydrophone),
                     SS = df$Surface.Station,
                     genLoc = df$General.Locale,
                     stringsAsFactors =F)
 
-  colnames(dfo) <- c('Station','Date','Time','Longitude','Latitude','NT','MN','PN','HC','CTD','RBR','SG','HP','SS','General Locale')
+  colnames(dfo) <- c('Station','Date','Time','Longitude','Latitude','NT','MN','PN','HC','CTD','RBR','SG','SD','HP','SS','General Locale')
 
   dfo<- dfo[!sapply(dfo, function (k) all(k==''))]
   caption <- paste0("\\label{stationSummary} Summary of oceanographic sampling stations for SEA Cruise ",cruiseID,". [",dim(dfo)[1]," Stations]")
@@ -155,7 +158,7 @@ tableHydro <- function(filename,saveLoc = "~/Desktop") {
   df <- readSEAxls(filename,rplcsv = T)
   names(df) <- gsub(' ','.',names(df))
 
-  Time <- df[,grep('Start',names(df))[1]]
+  Time <- df[,grep('Time',names(df))[1]]
   Time <- format(Time,format="%H:%M")
   Date <- format(df$Date,format="%Y-%m-%d")
 
@@ -260,7 +263,7 @@ tableSS <- function(filename,saveLoc = "~/Desktop") {
                    Time=Time,
                    Lon=df$LonDisplay,
                    Lat=df$LatDisplay,
-                   Temp=df[grep('Temp.*oC',names(df))],
+                   Temp=df[grep('Temp.*C',names(df))],
                    Sal=df[grep('Salinity',names(df))],
                    stringsAsFactors = F)
   colnames(dfo) <- c('Station','Date','Time','Longitude','Latitude','Temperature','Salinity')
@@ -305,7 +308,14 @@ tableNeuston <- function(filename,saveLoc = "~/Desktop") {
   file <- tail(strsplit(filename,'/')[[1]],1)
   ext <- tools::file_ext(file)
 
-  df <- readSEAxls(filename,rplcsv = T)
+  ship <- str_extract(file,"[CS]")
+  if(ship=="C"){
+    skip = 1
+  } else {
+    skip = 0
+  }
+
+  df <- readSEAxls(filename,skip=skip,rplcsv = T)
   names(df) <- gsub(' ','.',names(df))
 
   Time <- df[,grep('Time',names(df))[1]]
@@ -376,9 +386,12 @@ table100Count <- function(filename,saveLoc = "~/Desktop") {
   file <- tail(strsplit(filename,'/')[[1]],1)
   ext <- tools::file_ext(file)
 
-  dfn <- readSEAxls(filename,rplcsv = T,sheet=2)
-  df <- readSEAxls(filename,rplcsv = T,sheet=2,skip=1)
-  names(df) <- gsub(' ','.',names(dfn)[1:dim(df)[2]])
+  df <- readSEAxls(filename,rplcsv = T,sheet=2)
+  if(sum(is.na(df[1,]))==ncol(df)) {
+    df <- df[2:nrow(df),]
+  }
+  # df <-  readSEAxls(filename,rplcsv = T,sheet=2,skip=1)
+  # names(df) <- gsub(' ','.',names(dfn)[1:dim(df)[2]])
 
   Time <- df[,grep('Time',names(df))[1]]
   Time <- format(Time,format="%H:%M")
@@ -388,7 +401,7 @@ table100Count <- function(filename,saveLoc = "~/Desktop") {
   dfo <- data.frame(Station=df$Station,
                     Date=Date,
                     Time=Time,
-                    Cnid=as.numeric(df[,grep("Cnida",names(df))]),
+                    Cnid=as.numeric(df[,grep("Medu",names(df))]),
                     Siph=as.numeric(df[,grep("Sipho",names(df))]),
                     Cten=as.numeric(df[,grep("Cteno",names(df))]),
                     Pter=as.numeric(df[,grep("Ptero",names(df))]),
@@ -426,7 +439,7 @@ table100Count <- function(filename,saveLoc = "~/Desktop") {
                     Stom=as.numeric(df[,grep("Stoma",names(df))]),
                     Ostr=as.numeric(df[,grep("Ostra",names(df))]),
                     Iso=as.numeric(df[,grep("Isopo",names(df))]),
-                    Salp=as.numeric(df[,grep("Salps",names(df))]),
+                    Salp=as.numeric(df[,grep("Salp",names(df))]),
                     Fish=as.numeric(df[,grep("Fish.*Larva",names(df))]),
                     Fishe=as.numeric(df[,grep("Fish.*Eggs",names(df))]),
                     Other=Other,
