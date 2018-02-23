@@ -624,9 +624,15 @@ readSEAelg <- function(filein,clean=T) {
 #' @examples
 #' read_elg()
 #'
-read_elg <- function(filein,forceGPS=c(NA,'nav','lab'),preCheck = T) {
+read_elg <- function(filein,forceGPS=c(NA,'nav','lab'),preCheck = T,skip=0) {
 
   # TODO: Optimize code using pmap from purrr Package
+
+  if(skip>0) {
+    col_names <- names(read_csv(filein, n_max = 0))
+  } else {
+    col_names=T
+  }
 
   # Toggle a preCheck of the elg file for clearly bad lines and commas at end
   if(preCheck) {
@@ -642,11 +648,11 @@ read_elg <- function(filein,forceGPS=c(NA,'nav','lab'),preCheck = T) {
       str_c(collapse="")           # collapse vector into single line for read_csv
 
     # Read in lines using readr package (quicker than base read.csv)
-    df <- read_csv(liner,col_types = cols(.default=col_character()))
+    df <- read_csv(liner,col_types = cols(.default=col_character()),skip=skip,col_names = col_names)
 
   } else {
     # If no precheck then just read in the file as is
-    df <- read_csv(filein,col_types = cols(.default=col_character()))
+    df <- read_csv(filein,col_types = cols(.default=col_character()),skip=skip,col_names = col_names)
   }
 
   # Reasign names that have dashes in them to be referenced more easily
@@ -804,6 +810,30 @@ read_elg <- function(filein,forceGPS=c(NA,'nav','lab'),preCheck = T) {
                    wire_speed,wire_payout,wire_tension)
 
 
+}
+
+
+
+#' Update ELG data
+#'
+#' Add to an existing elg tibble from an SEA Event File that is in the process of being recorded.
+#'
+#' @param df current tibble of ELG data
+#' @param filein location of the *.elg file to update from
+#'
+#' @return
+#' @export
+#'
+#' @examples
+update_elg <- function(df,filein,preCheck=T) {
+
+  # Find number of rows to skip
+  nskip <- nrow(df)+1
+
+  # read in the lines
+  dfadd <- read_elg(filein,skip=nskip,preCheck=preCheck)
+
+  df <- bind_rows(df,dfadd)
 }
 
 
