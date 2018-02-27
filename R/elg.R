@@ -1,3 +1,4 @@
+# Series of functions that work to read in an Event data file from SEA's archive
 
 #' Read in SEA data an ELG event file and return a well formatted output
 #'
@@ -103,7 +104,7 @@ read_elg <- function(filein,forceGPS=c(NA,'nav','lab'),preCheck = T,skip=0) {
   df$lab_time <- parse_time(str_extract(df$lab_time,"[0-9]{6}"),format="%H%M%S")
   df$sys_dttm <- update(df$sys_date,hour=hour(df$sys_time),minute=minute(df$sys_time),second=second(df$sys_time))
 
-
+  # Should functionize the following
   if(length(which(is.na(df$lab_time))) < length(df$lab_time)) {
     difft <- df$lab_time - df$sys_time
     goodi <- !is.na(difft)
@@ -114,6 +115,7 @@ read_elg <- function(filein,forceGPS=c(NA,'nav','lab'),preCheck = T,skip=0) {
     df <- mutate(df,lab_dttm = parse_datetime(rep(NA,nrow(df))))
   }
 
+  # largely repeated from above
   if(length(which(is.na(df$nav_time))) < length(df$nav_time)) {
     difft <- df$nav_time - df$sys_time
     goodi <- !is.na(difft)
@@ -145,8 +147,10 @@ read_elg <- function(filein,forceGPS=c(NA,'nav','lab'),preCheck = T,skip=0) {
     dttm <- df$lab_dttm
   }
 
+  # add the chosen, lon, lat and dttm
   df <- mutate(df,lon=lon,lat=lat,dttm=dttm)
 
+  # arrange the columns into correct order
   df <- df[,c(42,40,41,37,1,2,39,3:8,38,9:36)]
 
 }
@@ -178,12 +182,113 @@ update_elg <- function(df,filein,preCheck=T) {
 }
 
 
+#' Cut out bad lines of elg file based on bad nav gps signals
+#'
+#' SEA event files contain output from a number of instruments
+#' including GPS, flow-through, chirp, etc.
+#'
+#' @param filein .elg filepath to be read in
+#' @param latstr regexp string to use to search for
+#' @param fileout a specified output filepath.
+#' If not specified, "_clean" is appended to name of input file and saved in the same directory.
+#' @keywords
+#' @export
+#' @examples
+#' clean_bad_elg()
+#'
+clean_bad_elg <- function(filein,latstr="[0-9]{4}\\.[0-9]{4}[NS]{1}",lonstr="[0-9]{5}\\.[0-9]{4}[EW]{1}",fileout=NULL) {
+
+  # read elg data as charactor tibble
+  df <- read_csv(filein,col_types = cols(.default = col_character()))
+  names(df) <- gsub("-",".",names(df))
+
+  # find all the correctly and incorrectly formatted latitude nav values using latstr
+
+
+  keep1 <- 1:length(df$GPS.nav.Lat) %in% grep(latstr,df$GPS.nav.Lat)
+  keep2 <- 1:length(df$GPS.nav.Lon) %in% grep(lonstr,df$GPS.nav.Lon)
+  keep3 <- 1:length(df$GPS.nav.quality) %in% grep("^1$",df$GPS.nav.quality)
+
+  badi <- which(!keep1|!keep2|!keep3)
+  goodi <- which(keep1&keep2&keep3)
+
+  # read in the raw lines from the elg file
+  df_raw <- read_lines(filein)
+
+  # only keep those lines which are good (plus the header line)
+  df_raw_clean <- df_raw[append(1,goodi+1)]
+
+  # create output filename if not specified in function call
+  if(is.null(fileout)) {
+    fileout <- str_replace(filein,".elg","_clean.elg")
+  }
+
+  # write data to file
+  write_lines(df_raw_clean,fileout)
+
+}
+
+
+
+
 
 # ELG Parse functions -----------------------------------------------------
 
 
+# Could make the following two functions into one
+
+#' Parse lon from elg file
+#'
+#' @param lonin lonto process
+#' @keywords
+#' @export
+#' @examples
+#' parse_lon()
+#'
+parse_lon <- function(lonin) {
+
+  # TODO: replace substring with tidyverse equivelent
+  len <- median(nchar(lonin),na.rm=T)
+  exp <- "[0-9]{5}.[0-9]{1-4}"
+  hemi <- ((substring(as.character(lonin),len,len)=='E')+0)*2-1
+  lon1 <- as.character(lonin)
+  lon1[nchar(lon1)!=len] <- NA
+  lon1 <- substring(lon1,1,len-1)
+  lon1[!1:length(lon1)%in%grep(exp,lon1)] <- NA
+  lon <- hemi*as.numeric(substring(lon1,1,3))+hemi*as.numeric(substring(lon1,4,20))/60
+
+  return(lon)
+
+}
 
 
+#' Parse lat from elg file
+#'
+#' @param latin lat to process
+#' @keywords
+#' @export
+#' @examples
+#' parse_lat()
+#'
+parse_lat <- function(latin) {
+
+  # Replace substring with tidyverse equivelent
+  len <- median(nchar(latin),na.rm=T)
+  exp <- "[0-9]{4}.[0-9]{1-4}"
+  hemi = ((substring(as.character(latin),len,len)=='N')+0)*2-1
+  lat1 <- as.character(latin)
+  lat1[nchar(lat1)!=len] <- NA
+  lat1 <- substring(lat1,1,len-1)
+  lat1[!1:length(lat1)%in%grep(exp,lat1)] <- NA
+  lat <- hemi*as.numeric(substring(lat1,1,2))+hemi*as.numeric(substring(lat1,3,20))/60
+
+  return(lat)
+
+}
+
+
+
+# Following code has now been replaced with parse_field
 
 #' Generic parser for fields contained in araw charactor tibble
 #'
@@ -345,103 +450,6 @@ message_read <- function(field,ii) {
 }
 
 
-#' Cut out bad lines of elg file based on bad nav gps signals
-#'
-#' SEA event files contain output from a number of instruments
-#' including GPS, flow-through, chirp, etc.
-#'
-#' @param filein .elg filepath to be read in
-#' @param latstr regexp string to use to search for
-#' @param fileout a specified output filepath.
-#' If not specified, "_clean" is appended to name of input file and saved in the same directory.
-#' @keywords
-#' @export
-#' @examples
-#' clean_bad_elg()
-#'
-clean_bad_elg <- function(filein,latstr="[0-9]{4}\\.[0-9]{4}[NS]{1}",lonstr="[0-9]{5}\\.[0-9]{4}[EW]{1}",fileout=NULL) {
-
-  # read elg data as charactor tibble
-  df <- read_csv(filein,col_types = cols(.default = col_character()))
-  names(df) <- gsub("-",".",names(df))
-
-  # find all the correctly and incorrectly formatted latitude nav values using latstr
-
-
-  keep1 <- 1:length(df$GPS.nav.Lat) %in% grep(latstr,df$GPS.nav.Lat)
-  keep2 <- 1:length(df$GPS.nav.Lon) %in% grep(lonstr,df$GPS.nav.Lon)
-  keep3 <- 1:length(df$GPS.nav.quality) %in% grep("^1$",df$GPS.nav.quality)
-
-  badi <- which(!keep1|!keep2|!keep3)
-  goodi <- which(keep1&keep2&keep3)
-
-  # read in the raw lines from the elg file
-  df_raw <- read_lines(filein)
-
-  # only keep those lines which are good (plus the header line)
-  df_raw_clean <- df_raw[append(1,goodi+1)]
-
-  # create output filename if not specified in function call
-  if(is.null(fileout)) {
-    fileout <- str_replace(filein,".elg","_clean.elg")
-  }
-
-  # write data to file
-  write_lines(df_raw_clean,fileout)
-
-}
-
-
-
-
-#' Parse lon from elg file
-#'
-#' @param lonin lonto process
-#' @keywords
-#' @export
-#' @examples
-#' parse_lon()
-#'
-parse_lon <- function(lonin) {
-
-  # TODO: replace substring with tidyverse equivelent
-  len <- median(nchar(lonin),na.rm=T)
-  exp <- "[0-9]{5}.[0-9]{1-4}"
-  hemi <- ((substring(as.character(lonin),len,len)=='E')+0)*2-1
-  lon1 <- as.character(lonin)
-  lon1[nchar(lon1)!=len] <- NA
-  lon1 <- substring(lon1,1,len-1)
-  lon1[!1:length(lon1)%in%grep(exp,lon1)] <- NA
-  lon <- hemi*as.numeric(substring(lon1,1,3))+hemi*as.numeric(substring(lon1,4,20))/60
-
-  return(lon)
-
-}
-
-
-#' Parse lat from elg file
-#'
-#' @param latin lat to process
-#' @keywords
-#' @export
-#' @examples
-#' parse_lat()
-#'
-parse_lat <- function(latin) {
-
-  # Replace substring with tidyverse equivelent
-  len <- median(nchar(latin),na.rm=T)
-  exp <- "[0-9]{4}.[0-9]{1-4}"
-  hemi = ((substring(as.character(latin),len,len)=='N')+0)*2-1
-  lat1 <- as.character(latin)
-  lat1[nchar(lat1)!=len] <- NA
-  lat1 <- substring(lat1,1,len-1)
-  lat1[!1:length(lat1)%in%grep(exp,lat1)] <- NA
-  lat <- hemi*as.numeric(substring(lat1,1,2))+hemi*as.numeric(substring(lat1,3,20))/60
-
-  return(lat)
-
-}
 
 
 
