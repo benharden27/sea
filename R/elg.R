@@ -13,7 +13,7 @@
 #' @examples
 #' read_elg()
 #'
-read_elg <- function(filein,forceGPS=c(NA,'nav','lab'),preCheck = T,skip=0) {
+read_elg <- function(filein,forceGPS=NULL,preCheck = T,skip=0) {
 
   # TODO: Optimize code using pmap from purrr Package
 
@@ -44,11 +44,13 @@ read_elg <- function(filein,forceGPS=c(NA,'nav','lab'),preCheck = T,skip=0) {
 
     # If no precheck then just read in the file as is
     df <- read_csv(filein,col_types = cols(.default=col_character()),skip=skip,col_names = col_names)
+
   }
 
   # Reasign names that have dashes in them to be referenced more easily
   names(df) <- str_replace_all(names(df),"-",".")
 
+  # Construct the
   args <- tibble::tribble(~name,~regex,~parse_fun,
                           "sys_date","date",mdy,
                           "sys_time","^time",parse_time,
@@ -86,57 +88,66 @@ read_elg <- function(filein,forceGPS=c(NA,'nav','lab'),preCheck = T,skip=0) {
                           "wire_payout","lci90.*payout",parse_double,
                           "wire_tension","lci90.*tension",parse_double,
                           "wire_speed","lci90.*spd",parse_double
-  )
+                          )
 
-  argsin <- as_tibble(list(df=list(df),regex=args$regex,parse_fun=args$parse_fun))
+  args_in <- as_tibble(list(df=list(df),regex=args$regex,parse_fun=args$parse_fun))
   namelist <- purrr::as_vector(dplyr::select(args,name))
 
   # Work out how to pass format arguments or just post-process afterward
 
   # output <- purrr::pmap(dplyr::select(args,df,regex,parse_fun),parse_field)
-  output <- purrr::pmap(argsin,parse_field)
+  output <- purrr::pmap(args_in,parse_field)
 
   names(output) <- namelist
   df <- tibble::as.tibble(output)
 
-  # # additional parsing
+  # additional parsing for some elements
   df$nav_time <- parse_time(str_extract(df$nav_time,"[0-9]{6}"),format="%H%M%S")
   df$lab_time <- parse_time(str_extract(df$lab_time,"[0-9]{6}"),format="%H%M%S")
   df$sys_dttm <- update(df$sys_date,hour=hour(df$sys_time),minute=minute(df$sys_time),second=second(df$sys_time))
 
-  # Should functionize the following
+  # Make datetimes from GPS using the system datetime
+  # TODO: functionize the following
   if(length(which(is.na(df$lab_time))) < length(df$lab_time)) {
     difft <- df$lab_time - df$sys_time
     goodi <- !is.na(difft)
-    rmdifft <- runmed(difft,11)
-    difft[abs(difft)>abs(rmdifft)&goodi] <- rmdifft[abs(difft)>abs(rmdifft)&goodi]
+    dayoffi <- difft < -8000
+    k <- ceiling(as.numeric(max(difft[abs(difft)<2*60*60],na.rm=T)/20))
+    if(!k%%2) {
+      k <- k+1
+    }
+    rmdifft <- runmed(difft,k)
+    difft[dayoffi & goodi] <- rmdifft[dayoffi & goodi]
     df <- mutate(df,lab_dttm = sys_dttm+difft)
   } else {
     df <- mutate(df,lab_dttm = parse_datetime(rep(NA,nrow(df))))
   }
 
-  # largely repeated from above
+  # largely repeated from above, but for NAV GPS
   if(length(which(is.na(df$nav_time))) < length(df$nav_time)) {
     difft <- df$nav_time - df$sys_time
     goodi <- !is.na(difft)
-    rmdifft <- runmed(difft,11)
-    difft[abs(difft)>abs(rmdifft)&goodi] <- rmdifft[abs(difft)>abs(rmdifft)&goodi]
+    dayoffi <- difft < -8000
+    k <- ceiling(as.numeric(max(difft[abs(difft)<2*60*60],na.rm=T)/20))
+    if(!k%%2) {
+      k <- k+1
+    }
+    rmdifft <- runmed(difft,k)
+    difft[dayoffi & goodi] <- rmdifft[dayoffi & goodi]
     df <- mutate(df,nav_dttm = sys_dttm+difft)
   } else {
     df <- mutate(df,nav_dttm = parse_datetime(rep(NA,nrow(df))))
   }
 
+  # choose master datetime
   # use nav GPS as the default and revert to lab gps and sys time as required
-  if(is.na(forceGPS)) {
+  if(is.null(forceGPS)) {
     lon <- df$nav_lon
     lon[is.na(lon) & !is.na(df$lab_lon)] <- df$lab_lon[is.na(lon) & !is.na(df$lab_lon)]
-
     lat <- df$nav_lat
     lat[is.na(lat) & !is.na(df$lab_lat)] <- df$lab_lat[is.na(lat) & !is.na(df$lab_lat)]
-
     dttm <- df$nav_dttm
     dttm[is.na(dttm) & !is.na(df$lab_dttm)] <- df$lab_dttm[is.na(dttm) & !is.na(df$lab_dttm)]
-
   } else if (forceGPS == 'nav') {
     lon <- df$nav_lon
     lat <- df$nav_lat
@@ -150,7 +161,7 @@ read_elg <- function(filein,forceGPS=c(NA,'nav','lab'),preCheck = T,skip=0) {
   # add the chosen, lon, lat and dttm
   df <- mutate(df,lon=lon,lat=lat,dttm=dttm)
 
-  # arrange the columns into correct order
+  # rearrange the columns into correct order
   df <- df[,c(42,40,41,37,1,2,39,3:8,38,9:36)]
 
 }
@@ -233,7 +244,6 @@ clean_bad_elg <- function(filein,latstr="[0-9]{4}\\.[0-9]{4}[NS]{1}",lonstr="[0-
 
 
 # ELG Parse functions -----------------------------------------------------
-
 
 # Could make the following two functions into one
 
