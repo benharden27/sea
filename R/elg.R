@@ -74,7 +74,7 @@ read_elg <- function(filein,forceGPS=NULL,preCheck = T,skip=0) {
                           "CDOM","cdom.*raw",parse_double,
                           "CDOM_1min","cdom.*1.*min",parse_double,
                           "CDOM_60min","cdom.*60.*min",parse_double,
-                          "xmiss",c("trans.*raw","xmiss.*raw"),parse_double,
+                          "xmiss",c("trans.*raw","xmiss.*raw","xmiss.*[^m]"),parse_double,
                           "xmiss_1min",c("trans.*1\\.*min","xmiss.*1\\.*min"),parse_double,
                           "xmiss_60min",c("trans.*60.*min","xmiss.*60.*min"),parse_double,
                           "wind_sp","true.*wind.*sp",parse_double,
