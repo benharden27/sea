@@ -79,55 +79,55 @@ read_neuston <- function(filein) {
 
   # ADD COMPLETE LIST OF ARGUMENTS (INCORPORATE NAMES?)
 
-  args <- tibble::tribble(~df,~name,~regex,~parse_fun,
-                          df,"station","^station",readr::parse_character,
-                          df,"date","^date",readr::parse_integer,
-                          df,"time_in","^time.*in",readr::parse_double,
-                          df,"time_out","^time.*out",readr::parse_double,
-                          df,"lon","londec",readr::parse_double,
-                          df,"lat","latdec",readr::parse_double,
-                          df,"temp","temp",readr::parse_double,
-                          df,"sal","sal",readr::parse_double,
-                          df,"fluor","fluor",readr::parse_double,
-                          df,"moon_phase","moon.*phase",readr::parse_double,
-                          df,"moon_mode",c("set.*risen","risen.*set"),readr::parse_character,
-                          df,"cloud_cover","cloud.*cover",readr::parse_double,
-                          df,"wind","wind.*cond",readr::parse_character,
-                          df,"current","adcp",readr::parse_character,
-                          df,"heading","heading",readr::parse_double,
-                          df,"tow_dist",c("distance.*m","tow.*distance"),readr::parse_double,
-                          df,"biomass","zoop.*bio",readr::parse_double,
-                          df,"phyl_num","^phyl.*[^a-z]$",readr::parse_integer,
-                          df,"phyl_vol","^phyl.*ml",readr::parse_double,
-                          df,"lept_num","^lept.*[^a-z]$",readr::parse_integer,
-                          df,"lept_vol","^lept.*ml",readr::parse_double,
-                          df,"myct_num","^myct.*[^a-z]$",readr::parse_integer,
-                          df,"myct_vol","^myct.*ml",readr::parse_double,
-                          df,"ceph_num","^ceph.*[^a-z]$",readr::parse_integer,
-                          df,"ceph_vol","^ceph.*ml",readr::parse_double,
-                          df,"nekt_other_num","^other.*nekton.*[^a-z]$",readr::parse_integer,
-                          df,"nekt_other_vol","^other.*nekt.*ml",readr::parse_double,
-                          df,"nekt_total_num","^total.*nekton.*[^a-z]$",readr::parse_integer,
-                          df,"nekt_total_vol","^total.*nekton.*ml",readr::parse_double,
-                          df,"nekt_info","^types.*nekton",readr::parse_character,
-                          df,"halo_num","^halo.*[^a-z]$",readr::parse_integer,
-                          df,"gelat_num","^gelat.*[^a-z]$",readr::parse_integer,
-                          df,"gelat_vol","^gelat.*ml",readr::parse_double,
-                          df,"gelat_info","types.*gelat",readr::parse_character,
-                          df,"sarg_natans_I","s.*natan.*.i.",readr::parse_double,
-                          df,"sarg_natans_II","s.*natan.*.ii.",readr::parse_double,
-                          df,"sarg_natans_VIII","s.*natan.*.viii.",readr::parse_double,
-                          df,"sarg_fluitans_III","s.*flui.*.iii.",readr::parse_double,
-                          df,"plas_pieces","^plastic.*pieces",readr::parse_integer,
-                          df,"plas_pellets","^plastic.*pellet",readr::parse_integer,
-                          df,"tar","^tar",readr::parse_integer
+  args <- tibble::tribble(~name,~regex,~parse_fun,
+                          "station","^station",readr::parse_character,
+                          "date","^date",readr::parse_integer,
+                          "time_in","^time.*in",readr::parse_double,
+                          "time_out","^time.*out",readr::parse_double,
+                          "lon","londec",readr::parse_double,
+                          "lat","latdec",readr::parse_double,
+                          "temp","temp",readr::parse_double,
+                          "sal","sal",readr::parse_double,
+                          "fluor","fluor",readr::parse_double,
+                          "moon_phase","moon.*phase",readr::parse_double,
+                          "moon_mode",c("set.*risen","risen.*set"),readr::parse_character,
+                          "cloud_cover","cloud.*cover",readr::parse_double,
+                          "wind","wind.*cond",readr::parse_character,
+                          "current","adcp",readr::parse_character,
+                          "heading","heading",readr::parse_double,
+                          "tow_dist",c("distance.*m","tow.*distance"),readr::parse_double,
+                          "biomass","zoop.*bio",readr::parse_double,
+                          "phyl_num","^phyl.*[^a-z]$",readr::parse_integer,
+                          "phyl_vol","^phyl.*ml",readr::parse_double,
+                          "lept_num","^lept.*[^a-z]$",readr::parse_integer,
+                          "lept_vol","^lept.*ml",readr::parse_double,
+                          "myct_num","^myct.*[^a-z]$",readr::parse_integer,
+                          "myct_vol","^myct.*ml",readr::parse_double,
+                          "ceph_num","^ceph.*[^a-z]$",readr::parse_integer,
+                          "ceph_vol","^ceph.*ml",readr::parse_double,
+                          "nekt_other_num","^other.*nekton.*[^a-z]$",readr::parse_integer,
+                          "nekt_other_vol","^other.*nekt.*ml",readr::parse_double,
+                          "nekt_total_num","^total.*nekton.*[^a-z]$",readr::parse_integer,
+                          "nekt_total_vol","^total.*nekton.*ml",readr::parse_double,
+                          "nekt_info","^types.*nekton",readr::parse_character,
+                          "halo_num","^halo.*[^a-z]$",readr::parse_integer,
+                          "gelat_num","^gelat.*[^a-z]$",readr::parse_integer,
+                          "gelat_vol","^gelat.*ml",readr::parse_double,
+                          "gelat_info","types.*gelat",readr::parse_character,
+                          "sarg_natans_I","s.*natan.*.i.",readr::parse_double,
+                          "sarg_natans_II","s.*natan.*.ii.",readr::parse_double,
+                          "sarg_natans_VIII","s.*natan.*.viii.",readr::parse_double,
+                          "sarg_fluitans_III","s.*flui.*.iii.",readr::parse_double,
+                          "plas_pieces","^plastic.*pieces",readr::parse_integer,
+                          "plas_pellets","^plastic.*pellet",readr::parse_integer,
+                          "tar","^tar",readr::parse_integer
                           )
-
+  args_in <- as_tibble(list(df=list(df),regex=args$regex,parse_fun=args$parse_fun))
   namelist <- purrr::as_vector(dplyr::select(args,name))
 
   # Work out how to pass format arguments or just post-process afterward
 
-  output <- purrr::pmap(dplyr::select(args,df,regex,parse_fun),parse_field)
+  output <- purrr::pmap(args_in,parse_field)
 
   names(output) <- purrr::as_vector(dplyr::select(args,name))
   output <- tibble::as.tibble(output)
@@ -155,4 +155,77 @@ read_neuston <- function(filein) {
   return(output)
 
 }
+
+
+#' Read Surface Sample Datasheet
+#'
+#' @param filein
+#'
+#' @return
+#' @export
+#'
+#' @examples
+read_surfsamp <- function(filein) {
+
+  # read in the surface station data sheet
+  df <- read_datasheet(filein)
+
+   # ADD COMPLETE LIST OF ARGUMENTS (INCORPORATE NAMES?)
+
+  args <- tibble::tribble(~name,~regex,~parse_fun,
+                          "station","^station",readr::parse_character,
+                          "date","^date",readr::parse_integer,
+                          "time","^time",readr::parse_double,
+                          "lon","londec",readr::parse_double,
+                          "lat","latdec",readr::parse_double,
+                          "temp","temp",readr::parse_double,
+                          "sal","sal",readr::parse_double,
+                          "fluor","fluor.*chl",readr::parse_double,
+                          "chla","chl.*a.*g",readr::parse_double,
+                          "chla_vol","chl.*a.*vol",readr::parse_double,
+                          "po4","po4",readr::parse_double,
+                          "no3","no3",readr::parse_double,
+                          "sio2","sio2",readr::parse_double,
+                          "o2","^o2",readr::parse_double,
+                          "pH","pH",readr::parse_double,
+                          "alk","alk",readr::parse_double,
+                          "m_plastics","po4",readr::parse_double,
+                          "notes","notes",readr::parse_character
+                          )
+
+  output <- parse_datasheet(df,args)
+
+  # parse the datetime field
+  output$date <- lubridate::as_date(output$date,origin="1900-1-1")
+  local <- lubridate::as_datetime(output$time*60*60*24)
+  date(local) <- output$date
+  df <- tibble::add_column(output,dttm = local,.after=1)
+
+  return(df)
+
+}
+
+
+#' Parse a raw datasheet
+#'
+#' @param df
+#' @param args
+#'
+#' @return
+#' @export
+#'
+#' @examples
+parse_datasheet <- function(df,args) {
+
+  # create args to be passes to pmap
+  args_in <- as_tibble(list(df=list(df),regex=args$regex,parse_fun=args$parse_fun))
+
+  output <- purrr::pmap(args_in,parse_field)
+
+  names(output) <- purrr::as_vector(dplyr::select(args,name))
+  output <- tibble::as.tibble(output)
+
+}
+
+
 
