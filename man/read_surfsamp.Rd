@@ -10,5 +10,7 @@ read_surfsamp(filein)
 \item{filein}{}
 }
 \description{
-Read Surface Sample Datasheet
+Function produces well formatted data from reading in a SEA surfsamp excel datasheet.
+These datasheets contain extracted chemical and auxilary data form surface samples
+collected on the SEA vessels.
 }
