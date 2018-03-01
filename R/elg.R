@@ -247,54 +247,6 @@ clean_bad_elg <- function(filein,latstr="[0-9]{4}\\.[0-9]{4}[NS]{1}",lonstr="[0-
 
 # Could make the following two functions into one
 
-#' Parse lon from elg file
-#'
-#' @param lonin lonto process
-#' @keywords
-#' @export
-#' @examples
-#' parse_lon()
-#'
-parse_lon <- function(lonin) {
-
-  # TODO: replace substring with tidyverse equivelent
-  len <- median(nchar(lonin),na.rm=T)
-  exp <- "[0-9]{5}.[0-9]{1-4}"
-  hemi <- ((substring(as.character(lonin),len,len)=='E')+0)*2-1
-  lon1 <- as.character(lonin)
-  lon1[nchar(lon1)!=len] <- NA
-  lon1 <- substring(lon1,1,len-1)
-  lon1[!1:length(lon1)%in%grep(exp,lon1)] <- NA
-  lon <- hemi*as.numeric(substring(lon1,1,3))+hemi*as.numeric(substring(lon1,4,20))/60
-
-  return(lon)
-
-}
-
-
-#' Parse lat from elg file
-#'
-#' @param latin lat to process
-#' @keywords
-#' @export
-#' @examples
-#' parse_lat()
-#'
-parse_lat <- function(latin) {
-
-  # Replace substring with tidyverse equivelent
-  len <- median(nchar(latin),na.rm=T)
-  exp <- "[0-9]{4}.[0-9]{1-4}"
-  hemi = ((substring(as.character(latin),len,len)=='N')+0)*2-1
-  lat1 <- as.character(latin)
-  lat1[nchar(lat1)!=len] <- NA
-  lat1 <- substring(lat1,1,len-1)
-  lat1[!1:length(lat1)%in%grep(exp,lat1)] <- NA
-  lat <- hemi*as.numeric(substring(lat1,1,2))+hemi*as.numeric(substring(lat1,3,20))/60
-
-  return(lat)
-
-}
 
 
 
