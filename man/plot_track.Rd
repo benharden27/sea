@@ -4,22 +4,22 @@
 \alias{plot_track}
 \title{Plots map of cruise track}
 \usage{
-plot_track(df, bathy = T, stations = NULL, reg = NULL, legend = T)
+plot_track(df, base_map = NULL, ...)
 }
 \arguments{
 \item{df}{data frame generated either by readSEAxls or readSEAelgthat contains GPS data}
+
+\item{type}{choose what type of data is in df (can be "elg" or "hourly")}
 
 \item{bathy}{logical for including background bathymetry (FIX: CURRENTLY STORED LOCALLY)}
 
 \item{stations}{option to include the output from readbioll() or readCTDsll() for locations of stations}
 
 \item{reg}{option to define a plotting region (calls reg2latlon).}
-
-\item{type}{choose what type of data is in df (can be "elg" or "hourly")}
 }
 \description{
 Plots map of cruise track
 }
 \examples{
-plotSEAct()
+plot_track()
 }
