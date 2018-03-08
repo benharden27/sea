@@ -1,4 +1,4 @@
-# Series of functions that work to read in an Event data file from SEA's archive
+# Series of functions that work to read in an event data file from SEA's archive
 
 #' Read in SEA data an ELG event file and return a well formatted output
 #'
@@ -6,8 +6,10 @@
 #' including GPS, flow-through, chirp, etc.
 #'
 #' @param filein .elg file to be read in
-#' @param clean logical used to determine whether certain fields are
-#' despiked and times when system is backflooded can be removed.
+#' @param forceGPS option to force the longitude, latitude and time to come from one
+#'  or other of the GPS feeds
+#' @param preCheck logical to do an initial check of lines to remove any standard issues
+#' @param skip number of lines to skip below header
 #' @keywords
 #' @export
 #' @examples
