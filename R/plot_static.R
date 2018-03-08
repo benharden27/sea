@@ -132,6 +132,9 @@ plot_track <- function(df,base_map=NULL,...) {
   if(is.null(base_map))
     base_map <- make_base_map(df,...)
 
+  if(check_antimerid(df))
+    df$lon[df$lon<0] <- df$lon[df$lon<0] + 360
+
   base_map +
     geom_path(data=df,aes(x=lon,y=lat))
     # geom_point(data=df,aes(x=lon,y=lat,color=temp))
