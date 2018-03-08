@@ -37,3 +37,16 @@ readbioll <- function(df,X=NULL) {
   return(X)
 }
 
+
+#' Check to se if crusie track crosses Anti-meridion
+#'
+#' @param df tibble from and read_ source
+#'
+#' @return
+#' @export
+#'
+#' @examples
+check_antimerid <- function(df) {
+  diff(range(df$lon,na.rm=T))>300
+}
+
