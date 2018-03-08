@@ -7,7 +7,7 @@
 parse_lon(lonin)
 }
 \arguments{
-\item{lonin}{lonto process}
+\item{lonin}{longitude to process}
 }
 \description{
 Parse lon from elg file
