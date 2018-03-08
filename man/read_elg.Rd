@@ -9,8 +9,12 @@ read_elg(filein, forceGPS = NULL, preCheck = T, skip = 0)
 \arguments{
 \item{filein}{.elg file to be read in}
 
-\item{clean}{logical used to determine whether certain fields are
-despiked and times when system is backflooded can be removed.}
+\item{forceGPS}{option to force the longitude, latitude and time to come from one
+or other of the GPS feeds}
+
+\item{preCheck}{logical to do an initial check of lines to remove any standard issues}
+
+\item{skip}{number of lines to skip below header}
 }
 \description{
 SEA event files contain output from a number of instruments
