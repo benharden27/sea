@@ -41,7 +41,7 @@ parse_field <- function(df,regex,parse_fun,...) {
 
 #' Parse lon from elg file
 #'
-#' @param lonin lonto process
+#' @param lonin longitude to process
 #' @keywords
 #' @export
 #' @examples
