@@ -10,10 +10,10 @@
 #' @examples
 extract_bathy <- function(df, lonran=NULL, latran=NULL) {
 
-  # dat <- marmap::getNOAA.bathy(lon1 = 0, lon2 = 0, lat1 = -90, lat2 = 90, resolution = 10, antimeridian = T)
-  topo <- readr::read_rds("./data/NOAA_10min.rds")
-  topo_lon <- as.numeric(attributes(topo)$dimnames[[1]])
-  topo_lat <- as.numeric(attributes(topo)$dimnames[[2]])
+  data("NOAA_5min")
+  bathy <- NOAA_10min
+  bathy_lon <- as.numeric(attributes(bathy)$dimnames[[1]])
+  bathy_lat <- as.numeric(attributes(bathy)$dimnames[[2]])
 
   if(is.null(lonran) | is.null(latran)) {
     lonran = range(df$lon,na.rm=T)
@@ -23,17 +23,30 @@ extract_bathy <- function(df, lonran=NULL, latran=NULL) {
   lonlim <- lonran + c(-5,5)
   latlim <- latran + c(-5,5)
 
-  lat1 <- find_near(topo_lat,latlim[1])
-  lat2 <- find_near(topo_lat,latlim[2])
-  topo <- topo[ ,lat1:lat2]
+  lat1 <- find_near(bathy_lat,latlim[1])
+  lat2 <- find_near(bathy_lat,latlim[2])
+  bathy <- bathy[ ,lat1:lat2]
+  bathy_lat <- bathy_lat[lat1:lat2]
 
   if(lonlim[2]<0)
-    topo_lon <- topo_lon - 360
+    bathy_lon <- bathy_lon - 360
 
-  lon1 <- find_near(topo_lon,lonlim[1])
-  lon2 <- find_near(topo_lon,lonlim[2])
-  topo <- topo[lon1:lon2, ]
+  lon1 <- find_near(bathy_lon,lonlim[1])
+  lon2 <- find_near(bathy_lon,lonlim[2])
+  bathy <- bathy[lon1:lon2, ]
+  bathy_lon <- bathy_lon[lon1:lon2]
 
+  bathy_vec <- as.vector(bathy)
+  bathy_vec[bathy_vec>0] <- 0
+  bathy_lon_vec <- rep(bathy_lon,length(bathy_lat))
+  bathy_lat_vec <- unlist(map(bathy_lat,rep,length(bathy_lon)))
+
+
+  bathy <- tibble(x=bathy_lon_vec,y=bathy_lat_vec,z=bathy_vec)
+
+  # ggplot() +
+  #   geom_raster(aes(x,y,fill = z), data=bathy, interpolate = TRUE) +
+  #   scale_fill_gradientn(colors = oce.colorsGebco())
 }
 
 
@@ -75,17 +88,20 @@ set_ll_lim <- function(ll,factor=0.15) {
 #' @export
 #'
 #' @examples
-make_base_map <- function(df,bathy=F,lonlim=NULL,latlim=NULL) {
+make_base_map <- function(df,plot_bathy=F,lonlim=NULL,latlim=NULL) {
 
-  # Determine if the cruise track crosses the anti-meridion and ammend lon as neccessary
+  data(coastline)
   path_cross <- check_antimerid(df)
-  if(path_cross)
+
+  if(path_cross) {
     df$lon[df$lon<0] <- df$lon[df$lon<0] + 360
+  } else {
+    coastline$long <- coastline$long - 360;
+  }
 
   # load and subset bathymetry if requested
-  if(bathy) {
-    topo <- extract_bathy(df)
-    breaks <- c(-10000,-7000,-5000,-4000,-3000,-2000,-1000,-500,-200,-100)
+  if(plot_bathy) {
+    bathy <- extract_bathy(df)
   }
 
   # Set longitude limits if not prescribed
@@ -98,18 +114,22 @@ make_base_map <- function(df,bathy=F,lonlim=NULL,latlim=NULL) {
 
   # load coastline data
   # retrieved using: coastdata <- map_data("world2Hires")
-  coastdata <- read_rds("./data/coastline.rds")
-  if(!path_cross)
-    coastdata$long <- coastdata$long - 360;
 
-  coastdata <- subset(coastdata,long > lonlim[1] & long < lonlim[2] & lat > latlim[1] & lat < latlim[2])
 
-  base_map <- ggplot(coastdata) +
-    geom_polygon(aes(x=long, y = lat, group = group)) +
+  coastline <- subset(coastline,long > lonlim[1] & long < lonlim[2] & lat > latlim[1] & lat < latlim[2])
+
+  base_map <- ggplot()
+
+  if(plot_bathy) {
+    base_map <- base_map +
+      geom_raster(aes(x,y,fill = z), data=bathy, interpolate = TRUE) +
+      scale_fill_gradientn(colors = oce.colorsGebco())
+  }
+
+  base_map <- base_map +
+    geom_polygon(aes(x=long, y = lat, group = group),data=coastline) +
     coord_quickmap(xlim=lonlim, ylim=latlim, expand = F) +
     theme_bw()
-
-
 }
 
 #
@@ -136,7 +156,72 @@ plot_track <- function(df,base_map=NULL,...) {
     df$lon[df$lon<0] <- df$lon[df$lon<0] + 360
 
   base_map +
-    geom_path(data=df,aes(x=lon,y=lat))
+    geom_path(aes(lon,lat),data=df)
     # geom_point(data=df,aes(x=lon,y=lat,color=temp))
+}
+
+
+#' Plot flow through data
+#'
+#' @param df
+#' @param type
+#' @param base_map
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot_surfvals <- function(df,type='temp',step=60,base_map=NULL,...) {
+
+  if(is.null(base_map))
+    base_map <- make_base_map(df,...)
+
+  if(check_antimerid(df))
+    df$lon[df$lon<0] <- df$lon[df$lon<0] + 360
+
+  val <- df[[type]]
+  if(is.null(val)) {
+    stop('Data type not found in data')
+  } else {
+    df <- dplyr::mutate(df,val = val)
+  }
+
+  ran <- seq(1,nrow(df),step)
+
+  base_map +
+    geom_path(aes(x=lon,y=lat),data=df) +
+    geom_point(aes(x=lon,y=lat,color=val),data=df) +
+    scale_color_gradientn(colors = oce.colorsTemperature(100))
+}
+
+
+
+#' Set a colormap
+#'
+#' @param values
+#' @param palette
+#' @param clim
+#' @param method
+#'
+#' @return
+#' @export
+#'
+#' @examples
+set_colormap <- function(values,palette,clim=NULL,method='quantile') {
+
+  if (is.null(clim)) {
+    ran <- quantile(values,c(0.01,0.99),na.rm=T)
+  } else if (lenght(clim) == 2 & is.numeric(clim)) {
+    if (method == 'quantile') {
+      ran <- quantile(values,clim,na.rm=T)
+    } else {
+      ran <- clim
+    }
+  } else {
+    stop('clim not a valid vector of two numbers')
+  }
+
+  pal <- leaflet::colorNumeric(palette,ran,na.color = NA)
 
 }
