@@ -4,8 +4,9 @@
 library(maps)
 library(mapdata)
 coastline <- ggplot2::map_data("world2")
-coastline <- ggplot2::map_data("world2Hires")
-devtools::use_data(coastline)
+devtools::use_data(coastline,overwrite = T)
+coastline_hr <- ggplot2::map_data("world2Hires")
+devtools::use_data(coastline_hr)
 
 
 # Create bathymetry

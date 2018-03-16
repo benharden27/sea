@@ -9,6 +9,7 @@
 plot_track_leaflet <- function(df) {
   m <- leaflet(df) %>%
     addTiles() %>%
+    addProviderTiles(providers$Esri.OceanBasemap) %>%
     addPolylines(lng = ~lon, lat = ~lat)
   m
 }

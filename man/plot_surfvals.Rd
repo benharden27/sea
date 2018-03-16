@@ -4,7 +4,8 @@
 \alias{plot_surfvals}
 \title{Plot flow through data}
 \usage{
-plot_surfvals(df, type = "temp", step = 60, base_map = NULL, ...)
+plot_surfvals(df, var = "temp", ran_val = NULL, ran_qua = c(0.01, 0.99),
+  step = 60, base_map = NULL, ...)
 }
 \arguments{
 \item{...}{}

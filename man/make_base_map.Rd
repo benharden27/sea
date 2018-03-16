@@ -4,7 +4,8 @@
 \alias{make_base_map}
 \title{Make a base map object}
 \usage{
-make_base_map(df, plot_bathy = F, lonlim = NULL, latlim = NULL)
+make_base_map(df, plot_bathy = F, lonlim = NULL, latlim = NULL,
+  high_res = F)
 }
 \arguments{
 \item{latlim}{}

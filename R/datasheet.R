@@ -205,7 +205,7 @@ read_surfsamp <- function(filein) {
   local <- lubridate::as_datetime(output$time*60*60*24)
   date(local) <- output$date
 
-  df <- tibble::add_column(output,dttm,dttm_local = local,.after=1)
+  df <- tibble::add_column(output,dttm_local = local,.after=1)
 
   return(df)
 
