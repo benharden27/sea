@@ -91,10 +91,14 @@ set_ll_lim <- function(ll,factor=0.15) {
 make_base_map <- function(df,plot_bathy=F,lonlim=NULL,latlim=NULL,high_res = F) {
 
   if(high_res == T) {
-    coastline <- data(coastline_hr)
+    data(coastline_hr)
+    coastline <- coastline_hr
   } else {
-    coastline <- data(coastline)
+    data(coastline)
   }
+
+  data(coastline)
+
 
   path_cross <- check_antimerid(df)
   if(path_cross) {
