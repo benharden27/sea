@@ -11,6 +11,9 @@
 #' plot_track()
 plot_track <- function(df,base_map=NULL,...) {
 
+  if(is_sea_struct(df))
+    df <- df$elg
+
   if(is.null(base_map))
     base_map <- make_base_map(df,...)
 
@@ -36,6 +39,9 @@ plot_track <- function(df,base_map=NULL,...) {
 #' @examples
 plot_flowthru <- function(df,var='temp',ran_val = NULL, ran_qua = c(0.01,0.99),
                           step = 60, base_map = NULL,...) {
+
+  if(is_sea_struct(df))
+    df <- df$elg
 
   if(is.null(base_map))
     base_map <- make_base_map(df,...)
@@ -85,6 +91,9 @@ plot_flowthru <- function(df,var='temp',ran_val = NULL, ran_qua = c(0.01,0.99),
 #'
 #' @examples
 plot_surf <- function(df, var = 'no3', ran_val = NULL, ran_qua = c(0,1), base_map = NULL, ...) {
+
+  if(is_sea_struct(df))
+    df <- df$surfsamp
 
   if(is.null(base_map))
     base_map <- make_base_map(df,...)
