@@ -28,6 +28,15 @@ filein <- "~/data/SEA/C276B/Event60sec_097.elg"
 C276B_elg <- read_elg(filein)
 devtools::use_data(C276B_elg)
 
+# create structured data files
+S269 <- package_data("~/data/SEA/S269")
+devtools::use_data(S269)
+
+S275 <- package_data("~/data/SEA/S275")
+devtools::use_data(S275)
+
+C276B <- package_data("~/data/SEA/C276B",forceGPS='nav')
+devtools::use_data(C276B)
 
 
 
