@@ -1,3 +1,20 @@
+#' Check for existence of standard SEA dataframe organization
+#'
+#' @param df
+#'
+#' @return
+#' @export
+#'
+#' @examples
+is_sea_struct <- function(df) {
+  field_names <- names(df)
+
+  check_names <- c('elg','hourly','surfsamp','neuston','hydro')
+
+  return(sum(check_names %in% field_names) == length(check_names))
+
+}
+
 
 #' Extract just the lat and lon of the CTD profiles in a CTD list object
 #'
