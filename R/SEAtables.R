@@ -39,7 +39,7 @@ printTable <- function(dfo,caption="",SigF=NULL,secondRow=NULL,thirdRow=NULL,fil
   }
   command <- paste0(secondRowAdd,
                     thirdRowAdd,
-                    "\\hline\\n\\endfirsthead\n",
+                    "\\hline\n\\endfirsthead\n",
                     paste0(paste(colnames(dfo),collapse=' & ')," \\\\ \n"),
                     secondRowAdd,
                     thirdRowAdd,
