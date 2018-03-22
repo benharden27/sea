@@ -4,7 +4,7 @@
 \alias{plot_surf}
 \title{Plot surface station data}
 \usage{
-plot_surf(df, var = "no3", ran_val = NULL, ran_qua = c(0.01, 0.99),
+plot_surf(df, var = "no3", ran_val = NULL, ran_qua = c(0, 1),
   base_map = NULL, ...)
 }
 \arguments{

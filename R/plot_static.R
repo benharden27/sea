@@ -88,7 +88,7 @@ set_ll_lim <- function(ll,factor=0.15) {
 #' @export
 #'
 #' @examples
-make_base_map <- function(df,plot_bathy=F,lonlim=NULL,latlim=NULL,high_res = F) {
+make_base_map <- function(df=NULL,lonlim=NULL,latlim=NULL,plot_bathy=F,high_res = F) {
 
   if(high_res == T) {
     data(coastline_hr)
@@ -97,35 +97,37 @@ make_base_map <- function(df,plot_bathy=F,lonlim=NULL,latlim=NULL,high_res = F) 
     data(coastline)
   }
 
-  data(coastline)
-
-
-  path_cross <- check_antimerid(df)
-  if(path_cross) {
-    df$lon[df$lon<0] <- df$lon[df$lon<0] + 360
-  } else {
-    coastline$long <- coastline$long - 360;
+  if(is_null(df) & is_null(lonlim) & is_null(latlim)) {
+    lonlim = c(270,310)
+    latlim = c(30,50)
   }
 
-  # load and subset bathymetry if requested
-  if(plot_bathy) {
-    bathy <- extract_bathy(df)
+  if(!is_null(df)) {
+    path_cross <- check_antimerid(df)
+    if(path_cross) {
+      df$lon[df$lon<0] <- df$lon[df$lon<0] + 360
+    } else {
+      coastline$long <- coastline$long - 360;
+    }
+
+    # load and subset bathymetry if requested
+    if(plot_bathy) {
+      bathy <- extract_bathy(df)
+    }
+
+    # Set longitude limits if not prescribed
+    if(is_null(lonlim))
+      lonlim <- set_ll_lim(df$lon)
+
+    # Set latitude limits if not prescribed
+    if(is.null(latlim))
+      latlim <- set_ll_lim(df$lat)
   }
-
-  # Set longitude limits if not prescribed
-  if(is.null(lonlim))
-    lonlim <- set_ll_lim(df$lon)
-
-  # Set latitude limits if not prescribed
-  if(is.null(latlim))
-    latlim <- set_ll_lim(df$lat)
 
   # load coastline data
-  # retrieved using: coastdata <- map_data("world2Hires")
+  coastline <- subset(coastline,long > lonlim[1]-5 & long < lonlim[2]+5 & lat > latlim[1]-5 & lat < latlim[2]+5)
 
-
-  coastline <- subset(coastline,long > lonlim[1] & long < lonlim[2] & lat > latlim[1] & lat < latlim[2])
-
+  # start ggplot of base map
   base_map <- ggplot()
 
   if(plot_bathy) {
@@ -180,7 +182,7 @@ plot_track <- function(df,base_map=NULL,...) {
 #' @export
 #'
 #' @examples
-plot_surfvals <- function(df,var='temp',ran_val = NULL, ran_qua = c(0.01,0.99),
+plot_flowthru <- function(df,var='temp',ran_val = NULL, ran_qua = c(0.01,0.99),
                           step = 60, base_map = NULL,...) {
 
   if(is.null(base_map))
@@ -212,7 +214,8 @@ plot_surfvals <- function(df,var='temp',ran_val = NULL, ran_qua = c(0.01,0.99),
   base_map +
     geom_path(aes(x=lon,y=lat),data=df) +
     geom_point(aes(x=lon,y=lat,color=val),data=df[ran,]) +
-    scale_color_gradientn(colors = oce.colorsTemperature(100))
+    scale_color_gradientn(colors = oce.colorsTemperature(100)) +
+    labs(color=var)
 }
 
 
@@ -229,7 +232,7 @@ plot_surfvals <- function(df,var='temp',ran_val = NULL, ran_qua = c(0.01,0.99),
 #' @export
 #'
 #' @examples
-plot_surf <- function(df, var = 'no3', ran_val = NULL, ran_qua = c(0.01,0.99), base_map = NULL, ...) {
+plot_surf <- function(df, var = 'no3', ran_val = NULL, ran_qua = c(0,1), base_map = NULL, ...) {
 
   if(is.null(base_map))
     base_map <- make_base_map(df,...)
@@ -243,15 +246,55 @@ plot_surf <- function(df, var = 'no3', ran_val = NULL, ran_qua = c(0.01,0.99), b
 
   df <- df[ii,]
   if(nrow(df)==0) {
-    stop('No values recorded for this field')
+    stop(paste('No values recorded for this field:',var))
   }
 
   df$val <- fix_range(df$val,ran_val,ran_qua)
 
   base_map +
-    geom_point(aes(x=lon,y=lat,color=val),data=df) +
-    scale_color_gradientn(colors = oce.colorsDensity(100))
+    geom_point(aes(x=lon,y=lat,fill=val),data=df, pch=21, size=5) +
+    scale_color_gradientn(colors = oce::oce.colorsDensity(100)) +
+    labs(color=var)
 }
+
+
+
+#' Make a bubble plot
+#'
+#' @param df
+#' @param var
+#' @param ran_val
+#' @param ran_qua
+#' @param base_map
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot_bubble <- function(df,var, ran_val = NULL, ran_qua = c(0,1), base_map = NULL, ...) {
+
+  if(is.null(base_map))
+    base_map <- make_base_map(df,...)
+
+  if(check_antimerid(df))
+    df$lon[df$lon<0] <- df$lon[df$lon<0] + 360
+
+  df <- check_var(df,var)
+
+  ii <- !is.na(df$val)
+
+  df <- df[ii,]
+  if(nrow(df)==0) {
+    stop(paste('No values recorded for this field:',var))
+  }
+
+  base_map +
+    geom_point(aes(x=lon,y=lat,size=val),data=df,pch=21,fill='white') +
+    labs(color=var)
+
+}
+
 
 
 
@@ -293,11 +336,14 @@ fix_range <- function(val,ran_val=NULL,ran_qua = c(0.01,0.99)) {
     val[val<ran_val[1]] <- ran_val[1]
     val[val>ran_val[2]] <- ran_val[2]
   } else if (!is_null(ran_qua)) {
-    quant <- quantile(df[[var]],ran_qua,na.rm=T)
+    quant <- quantile(val,ran_qua,na.rm=T)
     val[val<quant[1]] <- quant[1]
     val[val>quant[2]] <- quant[2]
   }
+
+  return(val)
 }
+
 
 #' Set a colormap
 #'
