@@ -9,20 +9,11 @@
 #' @export
 #' @examples
 #' plot_track()
-plot_track <- function(df,base_map=NULL,...) {
+plot_track <- function(df,data_source = "elg", ...) {
 
-  if(is_sea_struct(df))
-    df <- df$elg
+  make_base_map(df,...) +
+    make_track(df,data_source = data_source, ...)
 
-  if(is.null(base_map))
-    base_map <- make_base_map(df,...)
-
-  if(check_antimerid(df))
-    df$lon[df$lon<0] <- df$lon[df$lon<0] + 360
-
-  base_map +
-    geom_path(aes(lon,lat),data=df)
-    # geom_point(data=df,aes(x=lon,y=lat,color=temp))
 }
 
 
@@ -37,43 +28,24 @@ plot_track <- function(df,base_map=NULL,...) {
 #' @export
 #'
 #' @examples
-plot_flowthru <- function(df,var='temp',ran_val = NULL, ran_qua = c(0.01,0.99),
-                          step = 60, base_map = NULL,...) {
+plot_flowthru <- function(df,data_source = "elg", var='temp', step = NULL,
+                          colormap = oce::oce.colorsTemperature(),
+                          ran_val = NULL, ran_qua = c(0.01,0.99), ...) {
 
-  if(is_sea_struct(df))
-    df <- df$elg
-
-  if(is.null(base_map))
-    base_map <- make_base_map(df,...)
-
-  if(check_antimerid(df))
-    df$lon[df$lon<0] <- df$lon[df$lon<0] + 360
-
-  val <- df[[var]]
-  if(is.null(val)) {
-    stop('Data type not found in data')
-  } else {
-    df <- dplyr::mutate(df,val = val)
+  if(is_null(step)) {
+    if(data_source == 'elg') {
+      step = 60
+    } else {
+      step = 1
+    }
   }
 
-  ran <- seq(1,nrow(df),step)
+  make_base_map(df,...) +
+    make_dots(df,data_source = data_source, var = var,
+              step = step, ran_val = ran_val, ran_qua = ran_qua, ...) +
+    scale_color_gradientn(colors = colormap(100))
 
-  if(!is_null(ran_val)) {
-    df$val[df$val<ran_val[1]] <- ran_val[1]
-    df$val[df$val>ran_val[2]] <- ran_val[2]
-  }
 
-  if(!is_null(ran_qua)) {
-    quant <- quantile(df$val,ran_qua,na.rm=T)
-    df$val[df$val<quant[1]] <- quant[1]
-    df$val[df$val>quant[2]] <- quant[2]
-  }
-
-  base_map +
-    geom_path(aes(x=lon,y=lat),data=df) +
-    geom_point(aes(x=lon,y=lat,color=val),data=df[ran,]) +
-    scale_color_gradientn(colors = oce.colorsTemperature(100)) +
-    labs(color=var)
 }
 
 

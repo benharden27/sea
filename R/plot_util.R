@@ -1,3 +1,65 @@
+#' Extract ETOPO5 bathymetry for cruise region
+#'
+#' @param df
+#' @param lonran
+#' @param latran
+#'
+#' @return
+#' @export
+#'
+#' @examples
+extract_bathy <- function(df, lonran=NULL, latran=NULL) {
+
+  data("NOAA_5min")
+  bathy <- NOAA_10min
+  bathy_lon <- as.numeric(attributes(bathy)$dimnames[[1]])
+  bathy_lat <- as.numeric(attributes(bathy)$dimnames[[2]])
+
+  if(is.null(lonran) | is.null(latran)) {
+    lonran = range(df$lon,na.rm=T)
+    latran = range(df$lat,na.rm=T)
+  }
+
+  lonlim <- lonran + c(-5,5)
+  latlim <- latran + c(-5,5)
+
+  lat1 <- find_near(bathy_lat,latlim[1])
+  lat2 <- find_near(bathy_lat,latlim[2])
+  bathy <- bathy[ ,lat1:lat2]
+  bathy_lat <- bathy_lat[lat1:lat2]
+
+  if(lonlim[2]<0)
+    bathy_lon <- bathy_lon - 360
+
+  lon1 <- find_near(bathy_lon,lonlim[1])
+  lon2 <- find_near(bathy_lon,lonlim[2])
+  bathy <- bathy[lon1:lon2, ]
+  bathy_lon <- bathy_lon[lon1:lon2]
+
+  bathy_vec <- as.vector(bathy)
+  bathy_vec[bathy_vec>0] <- 0
+  bathy_lon_vec <- rep(bathy_lon,length(bathy_lat))
+  bathy_lat_vec <- unlist(map(bathy_lat,rep,length(bathy_lon)))
+
+
+  bathy <- tibble(x=bathy_lon_vec,y=bathy_lat_vec,z=bathy_vec)
+
+  # ggplot() +
+  #   geom_raster(aes(x,y,fill = z), data=bathy, interpolate = TRUE) +
+  #   scale_fill_gradientn(colors = oce.colorsGebco())
+}
+
+extract__data <- function(df,data_source = 'elg') {
+
+  if(is_sea_struct(df)) {
+    df <- select_data(df,data_source)
+  }
+
+
+
+
+}
+
 #' Check for existence of standard SEA dataframe organization
 #'
 #' @param df
@@ -16,44 +78,68 @@ is_sea_struct <- function(df) {
 }
 
 
-#' Extract just the lat and lon of the CTD profiles in a CTD list object
+#' Select a particular data source from standard data frame
 #'
-#' Mostly for use in plotting locations of CTDs on cruise map
+#' @param df
+#' @param data_source
 #'
-#' @param CTDs CTD list object
-#' @param X previousy extracted locations from another data source (e.g. Neustron tows)
-#' @keywords
+#' @return
 #' @export
+#'
 #' @examples
-#' readCTDsll()
-readCTDsll <- function(CTDs,X=NULL) {
-  for (i in 1:length(CTDs)) {
-    X$lon <- append(X$lon,CTDs[[i]]@metadata$longitude)
-    X$lat <- append(X$lat,CTDs[[i]]@metadata$latitude)
-    X$flag <- append(X$flag,1)
+select_data <- function(df,data_source = 'elg') {
+
+  df_names <- names(df)
+  if(data_source %in% df_names){
+    if(!is_null(df[[data_source]])) {
+      out <- df[[data_source]]
+    } else {
+      stop("No data of this source in data frame")
+    }
+  } else {
+    stop("Data source not found in data frame")
   }
-  return(X)
+
+  return(out)
+
 }
 
 
-
-#' Extract just the lat and lon of the neuston tows stored in a data frame
+#' Convert lon to all pos it cross anti-merid
 #'
-#' Mostly for use in plotting locations of neustons on cruise map
+#' @param df
 #'
-#' @param df data frame containing Neuston tow data
-#' @param X previousy extracted locations from another data source (e.g. CTDs)
-#' @keywords
+#' @return
 #' @export
+#'
 #' @examples
-#' readbioll()
-readbioll <- function(df,X=NULL) {
-  X$lon <- c(X$lon,df$LonDEC)
-  X$lat <- c(X$lat,df$LatDEC)
-  X$flag <- c(X$flag,rep(2,length(X$lon)))
-  return(X)
+format_lon <- function(df) {
+  if(check_antimerid(df)) {
+    df$lon[df$lon<0] <- df$lon[df$lon<0] + 360
+  }
+
+  return(df)
+
 }
 
+
+
+#' check if variable is in data frame
+#'
+#' @param df
+#' @param var
+#'
+#' @return
+#' @export
+#'
+#' @examples
+is_var <- function(df,var) {
+
+  df_names <- names(df)
+
+  var %in% df_names
+
+}
 
 
 #' Create good lon/lat limtis from vector
@@ -110,6 +196,49 @@ fix_range <- function(val,ran_val=NULL,ran_qua = c(0.01,0.99)) {
 }
 
 
+#' Wind speed and direction to U and V
+#'
+#' @param ws
+#' @param wd
+#'
+#' @return
+#' @export
+#'
+#' @examples
+wswd_to_uv <- function(ws,wd) {
+
+  v = -ws*cos(wd*pi/180)
+  u = -ws*sin(wd*pi/180)
+
+  out <- tibble(u = u, v = v)
+
+}
+
+
+#' Turns vectors into lon and lat moved
+#'
+#' @param lon
+#' @param lat
+#' @param u
+#' @param v
+#'
+#' @return
+#' @export
+#'
+#' @examples
+make_vector_lonlat <- function(lon,lat,u,v) {
+
+  scale = .1
+
+  late <- lat + v*scale
+  lone <- lon + u*scale/cos(lat*pi/180)
+
+  out <- tibble(lon=lon,lat=lat,lone=lone,late=late)
+
+}
+
+
+
 
 
 #' Set a colormap
@@ -139,5 +268,48 @@ set_colormap <- function(values,palette,clim=NULL,method='quantile') {
 
   pal <- leaflet::colorNumeric(palette,ran,na.color = NA)
 
+}
+
+
+
+
+
+#' Extract just the lat and lon of the CTD profiles in a CTD list object
+#'
+#' Mostly for use in plotting locations of CTDs on cruise map
+#'
+#' @param CTDs CTD list object
+#' @param X previousy extracted locations from another data source (e.g. Neustron tows)
+#' @keywords
+#' @export
+#' @examples
+#' readCTDsll()
+readCTDsll <- function(CTDs,X=NULL) {
+  for (i in 1:length(CTDs)) {
+    X$lon <- append(X$lon,CTDs[[i]]@metadata$longitude)
+    X$lat <- append(X$lat,CTDs[[i]]@metadata$latitude)
+    X$flag <- append(X$flag,1)
+  }
+  return(X)
+}
+
+
+
+
+#' Extract just the lat and lon of the neuston tows stored in a data frame
+#'
+#' Mostly for use in plotting locations of neustons on cruise map
+#'
+#' @param df data frame containing Neuston tow data
+#' @param X previousy extracted locations from another data source (e.g. CTDs)
+#' @keywords
+#' @export
+#' @examples
+#' readbioll()
+readbioll <- function(df,X=NULL) {
+  X$lon <- c(X$lon,df$LonDEC)
+  X$lat <- c(X$lat,df$LatDEC)
+  X$flag <- c(X$flag,rep(2,length(X$lon)))
+  return(X)
 }
 
