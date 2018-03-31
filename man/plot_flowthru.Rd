@@ -4,7 +4,7 @@
 \alias{plot_flowthru}
 \title{Plot flow through data}
 \usage{
-plot_flowthru(df, data_source = "elg", var = "temp", step = NULL,
+plot_flowthru(df, var = "temp", data_source = "elg", step = NULL,
   colormap = oce::oce.colorsTemperature(), ran_val = NULL,
   ran_qua = c(0.01, 0.99), ...)
 }

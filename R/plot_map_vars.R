@@ -12,7 +12,7 @@
 plot_track <- function(df,data_source = "elg", ...) {
 
   make_base_map(df,...) +
-    make_track(df,data_source = data_source, ...)
+    make_track(df,data_source = data_source)
 
 }
 
@@ -28,7 +28,7 @@ plot_track <- function(df,data_source = "elg", ...) {
 #' @export
 #'
 #' @examples
-plot_flowthru <- function(df,data_source = "elg", var='temp', step = NULL,
+plot_flowthru <- function(df, var='temp', data_source = "elg", step = NULL,
                           colormap = oce::oce.colorsTemperature(),
                           ran_val = NULL, ran_qua = c(0.01,0.99), ...) {
 
@@ -41,10 +41,9 @@ plot_flowthru <- function(df,data_source = "elg", var='temp', step = NULL,
   }
 
   make_base_map(df,...) +
-    make_dots(df,data_source = data_source, var = var,
-              step = step, ran_val = ran_val, ran_qua = ran_qua, ...) +
+    make_points(df,data_source = data_source, var = var,
+              step = step, ran_val = ran_val, ran_qua = ran_qua) +
     scale_color_gradientn(colors = colormap(100))
-
 
 }
 
@@ -63,31 +62,7 @@ plot_flowthru <- function(df,data_source = "elg", var='temp', step = NULL,
 #'
 #' @examples
 plot_surf <- function(df, var = 'no3', ran_val = NULL, ran_qua = c(0,1), base_map = NULL, ...) {
-
-  if(is_sea_struct(df))
-    df <- df$surfsamp
-
-  if(is.null(base_map))
-    base_map <- make_base_map(df,...)
-
-  if(check_antimerid(df))
-    df$lon[df$lon<0] <- df$lon[df$lon<0] + 360
-
-  df <- check_var(df,var)
-
-  ii <- !is.na(df$val)
-
-  df <- df[ii,]
-  if(nrow(df)==0) {
-    stop(paste('No values recorded for this field:',var))
-  }
-
-  df$val <- fix_range(df$val,ran_val,ran_qua)
-
-  base_map +
-    geom_point(aes(x=lon,y=lat,fill=val),data=df, pch=21, size=5) +
-    scale_color_gradientn(colors = oce::oce.colorsDensity(100)) +
-    labs(color=var)
+  plot_flowthru(df,var = var,data_source = "surfsamp",colormap = oce::oce.colorsChlorophyll())
 }
 
 

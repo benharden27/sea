@@ -71,6 +71,31 @@ make_base_map <- function(df=NULL,lonlim=NULL,latlim=NULL,data_source = 'hourly'
     geom_polygon(aes(x=long, y = lat, group = group),data=coastline) +
     coord_quickmap(xlim=lonlim, ylim=latlim, expand = F) +
     theme_bw()
+
+#
+#   xlabs <- ggplot_build(base_map)$layout$panel_ranges[[1]]$x.major_source
+#   ylabs <- ggplot_build(base_map)$layout$panel_ranges[[1]]$y.major_source
+#
+#   if (mean(xlabs, na.rm = T) < 0) {
+#     xlabs <- paste0(abs(xlabs),"^o^W")
+#   } else {
+#     xlabs[xlabs>180] <- paste0(360-xlabs[xlabs>180],"^o^W")
+#     xlabs[xlabs<=180] <- paste0(xlabs[xlabs<=180],"^o^E")
+#   }
+#
+#   if(mean(ylabs,na.rm=T) > 0) {
+#     ylabs <- paste0(ylabs,"^o^N")
+#   } else {
+#     ylabs <- paste0(abs(ylabs),"^o^S")
+#   }
+#
+#
+#   base_map <- base_map +
+#     scale_x_continuous(labels = xlabs) +
+#     scale_y_continuous(labels = ylabs)
+
+
+  return(base_map)
 }
 
 
@@ -111,7 +136,7 @@ make_track <- function(df,data_source = "elg") {
 #' @export
 #'
 #' @examples
-make_dots <- function(df, data_source = "elg", var = "temp", step = 1, size = 2,
+make_points <- function(df, var = "temp", data_source = "elg", step = 1, size = 2,
                       ran_val = NULL, ran_qua = c(0.01,0.99)) {
 
   # select the data source from sea structure
@@ -144,8 +169,7 @@ make_dots <- function(df, data_source = "elg", var = "temp", step = 1, size = 2,
   ran <- seq(1,nrow(df),step)
 
   # return a geom_points structure from data
-  out <- geom_point(aes(x = lon, y = lat, color = val), data=df[ran, ],
-                    pch = 21, size = size)
+  out <- geom_point(aes(x = lon, y = lat, color = val), data=df[ran, ], size = size)
 
 
 }
@@ -162,7 +186,7 @@ make_dots <- function(df, data_source = "elg", var = "temp", step = 1, size = 2,
 #' @export
 #'
 #' @examples
-make_vectors <- function(df, data_source = "elg", field = "wind", step = 60) {
+make_vectors <- function(df, data_source = "elg", field = "wind", step = 60, scale = 1) {
 
   # select the data source from sea structure
   if(is_sea_struct(df))
@@ -173,7 +197,7 @@ make_vectors <- function(df, data_source = "elg", field = "wind", step = 60) {
 
   if(field=="wind") {
     uv <- wswd_to_uv(df$wind_sp,df$wind_dir)
-    df <- mutate(df,u = uv$u, v = uv$v)
+    df <- mutate(df,u = uv$u*scale, v = uv$v*scale)
   }
 
   vec <- make_vector_lonlat(df$lon,df$lat,df$u,df$v)
@@ -182,6 +206,7 @@ make_vectors <- function(df, data_source = "elg", field = "wind", step = 60) {
   # set up th range of values to be potted
   ran <- seq(1,nrow(df),step)
 
+  # TODO add arrows to end of line rather than dots
   out <- geom_segment(aes(x = lon, y = lat, xend = lone, yend = late), data = df[ran, ])
 
 }
