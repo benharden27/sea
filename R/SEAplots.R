@@ -936,7 +936,7 @@ plotmapTS<-function(CTDs,ylim=c(0,1000)) {
 #' @export
 #' @examples
 #' plotmap3sec()
-plotmap3sec<-function(CTDs,ylim=c(0,300),Tran=NULL,Sran=NULL,Dran=NULL) {
+plotmap3sec<-function(CTDs,ylim=c(0,300),Tran=NULL,Sran=NULL,Dran=NULL, dist_vec = NULL) {
   # Make the whole Section and read metadata
   sec <- as.section(CTDs)
   s <- sectionGrid(sec)
@@ -955,7 +955,13 @@ plotmap3sec<-function(CTDs,ylim=c(0,300),Tran=NULL,Sran=NULL,Dran=NULL) {
     lonctd[i] <- s[["station"]][[i]]@metadata$longitude
     latctd[i] <- s[["station"]][[i]]@metadata$latitude
   }
-  dist <- geodDist(lonctd,latctd,alongPath=T)
+
+  if(is.null(dist_vec)) {
+    dist <- geodDist(lonctd,latctd,alongPath=T)
+  } else {
+    dist <- dist_vec
+  }
+
   lonctd[lonctd<0] <- lonctd[lonctd<0]+360;
 
 
@@ -1076,10 +1082,16 @@ plotmap3sec<-function(CTDs,ylim=c(0,300),Tran=NULL,Sran=NULL,Dran=NULL) {
 #' @export
 #' @examples
 #' plot02flsec()
-plotO2flsec<-function(CTDs) {
+plotO2flsec<-function(CTDs, dist_vec = NULL) {
   # Make the whole Section and read metadata
   sec <- as.section(CTDs)
-  dist <- geodDist(sec,alongPath=T)
+  if(is.null(dist_vec)) {
+    dist <- geodDist(sec,alongPath=T)
+  } else {
+    dist <- dist_vec
+  }
+
+
   s <- sectionGrid(sec)
   nstation <- length(s[['station']])
   p <- unique(s[['pressure']])

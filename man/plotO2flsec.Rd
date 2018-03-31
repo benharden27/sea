@@ -4,7 +4,7 @@
 \alias{plotO2flsec}
 \title{Plot CTD auxilary data sections (fluo/oxygen) as two panels}
 \usage{
-plotO2flsec(CTDs)
+plotO2flsec(CTDs, dist_vec = NULL)
 }
 \arguments{
 \item{CTDs}{object containing CTD objects created using read.ctd from oce package.}

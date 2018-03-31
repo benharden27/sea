@@ -5,7 +5,7 @@
 \title{Plot CTD sections as map and three panels of T, S and rho}
 \usage{
 plotmap3sec(CTDs, ylim = c(0, 300), Tran = NULL, Sran = NULL,
-  Dran = NULL)
+  Dran = NULL, dist_vec = NULL)
 }
 \arguments{
 \item{CTDs}{object containing CTD objects created using read.ctd from oce package.}
