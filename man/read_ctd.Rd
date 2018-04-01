@@ -8,8 +8,14 @@ read_ctd(cnv_file, pmin = 5, p = 1, ...)
 }
 \arguments{
 \item{cnv_file}{file path to the CNV file to be read}
+
+\item{pmin}{minimum cut off pressure for ctdTrim}
+
+\item{p}{pressure bins for ctdDecimate}
+
+\item{...}{additional arguments passed to called functions}
 }
 \description{
-Wrapper function for oce functions read.ctd, ctdTrim, and @ctdDecimate.
+Wrapper function for oce functions read.ctd, ctdTrim, and ctdDecimate.
 Extracts and adds metadata from header that is unique to SEA headers.
 }
