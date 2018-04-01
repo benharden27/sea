@@ -31,11 +31,18 @@ read_ctd <- function(cnv_file, pmin = 5, p = 1, ...) {
 
 # Extract metadata --------------------------------------------------------
 
-  X <- readLatLon(cnv_file)
+  X <- read_cnv_latlon(cnv_file)
 
+  line <- grep("Water Depth",X$r)[1]
+  depth <- as.numeric(strsplit(X$r[line],'h')[[1]][2])
 
+  ctd@metadata$longitude <- X$lon
+  ctd@metadata$latitude <- X$lat
+  ctd@metadata$station <- as.numeric(strsplit(cnv_file,'-')[[1]][2]) # have to do this to make makeSection work
+  ctd@metadata$waterDepth <- depth
+  ctd@metadata$filename <- cnv_file
 
-
+  return(ctd)
 
 }
 
@@ -51,7 +58,9 @@ read_ctd <- function(cnv_file, pmin = 5, p = 1, ...) {
 #' @examples
 read_cnv_latlon <- function(cnv_file) {
 
-  r <- readr::read_lines(filein,n_max = 100)
+  # TODO: Need to work on this to improe efficiency and neatness
+
+  r <- readr::read_lines(cnv_file,n_max = 100)
 
   # set possible patterns to search for
   patt <- "([0-9]+[^0-9]+[0-9]+[^0-9]+[0-9]*)"
@@ -135,10 +144,10 @@ read_cnv_latlon <- function(cnv_file) {
   # Define Hemisphere
   # hemi <- substr(rest,regexpr("[WE]",rest),regexpr("[WE]",rest));
   hemi <- substr(rest,regexpr("[WE].{0,5}$",rest),regexpr("[WE].{0,5}$",rest));
-  if(hemi=='W'){
-    fac <- -1
-  } else {
+  if(hemi=='E'){
     fac <- 1
+  } else {
+    fac <- -1
   }
 
 
