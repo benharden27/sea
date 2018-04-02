@@ -17,20 +17,22 @@ plot_section <- function(sec, var = "temperature", var_breaks = NULL, dist_vec =
   s <- oce::sectionGrid(sec)
 
   nstation <- length(s[['station']])
+  latctd <- s@metadata$latitude
+  lonctd <- s@metadata$longitude
 
   p <- unique(s[['pressure']])
-  d <- oce::swDepth(p, mean(s@metadata$latitude, na.rm = TRUE))
+  d <- oce::swDepth(p, mean(latctd, na.rm = TRUE))
+  di = c(find_near(d, ylim[1]):find_near(d,ylim[2]))
 
   # Set up v arrays for plotting
-  np <- length(p)
-  v <- array(NA, dim = c(nstation, np))
-  lonctd <- latctd <- rep(NA, nstation)
-
+  v <- array(NA, dim = c(nstation, length(p)))
   for (i in 1:nstation) {
     v[i, ] <- s[['station']][[i]][[var]]
-    lonctd[i] <- s[["station"]][[i]]@metadata$longitude
-    latctd[i] <- s[["station"]][[i]]@metadata$latitude
   }
+
+  # cut data below ylims
+  v <- v[ ,di]
+  d <- d[di]
 
   if(is.null(dist_vec)) {
     dist <- oce::geodDist(sec, alongPath=T)
@@ -42,7 +44,6 @@ plot_section <- function(sec, var = "temperature", var_breaks = NULL, dist_vec =
     lonctd[lonctd<0] <- lonctd[lonctd<0]+360
   }
 
-
   # set up plotting ranges
   if(is.null(var_breaks)) {
     var_breaks <- pretty(v,n = 10)
@@ -52,7 +53,7 @@ plot_section <- function(sec, var = "temperature", var_breaks = NULL, dist_vec =
   var_cm <- oce::colormap(v, breaks = var_breaks, col = oce::oceColorsTemperature)
 
   # Plot temperature and add labels and profile lines
-  imagep(dist, p, v, colormap = var_cm, flipy = TRUE, ylab = 'Depth [m]',
+  imagep(dist, d, v, colormap = var_cm, flipy = TRUE, ylab = 'Depth [m]',
          filledContour = TRUE, zlab = var, missingColor = NULL,
          drawTriangles = T, ylim = ylim,
          zlabPosition = 'side')
