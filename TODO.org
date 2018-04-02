@@ -1,6 +1,0 @@
-* Master list of things to fix in sea
-
-Investigate new behaviour in updated R
-[ ] Use of tibble in readxl and throughout
-[ ] Confirm all code working as should
-
