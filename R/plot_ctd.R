@@ -69,3 +69,35 @@ plot_section <- function(sec, var = "temperature", var_breaks = NULL, dist_vec =
   }
 
 }
+
+#' Plot a map of ctd section locations
+#'
+#' @param sec section object to plot
+#' @param labels logical as to whether station IDs should be printed
+#' @param factor scale factor passed to set_ll_lim for setting range of plot
+#' @param ... additional arguments to pass to make_section_map
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot_section_map <- function(sec, labels = TRUE, factor = 0.15, ...) {
+
+  latctd <- sec@metadata$latitude
+  lonctd <- sec@metadata$longitude
+
+  lonlim <- set_ll_lim(lonctd, factor)
+  latlim <- set_ll_lim(latctd, factor)
+
+  m <- make_base_map(lonlim = lonlim, latlim = latlim, ...) +
+    ggplot2::geom_point(ggplot2::aes(lonctd, latctd))
+
+  if(labels == TRUE) {
+    label <- sec@metadata$stationId
+    m + ggplot2::geom_text(ggplot2::aes(lonctd, latctd, label = label),
+                           nudge_x = diff(lonlim)/30, hjust = "left")
+  } else {
+    m
+  }
+
+}
