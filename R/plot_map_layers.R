@@ -20,13 +20,13 @@ make_base_map <- function(df=NULL,lonlim=NULL,latlim=NULL,data_source = 'hourly'
   }
 
   # choose default lon and lat if no df, lonlim or latlim are selected
-  if(is_null(df) & is_null(lonlim) & is_null(latlim)) {
+  if(is.null(df) & is.null(lonlim) & is.null(latlim)) {
     lonlim = c(270,310)
     latlim = c(30,50)
   }
 
   # if there is an input data-frame
-  if(!is_null(df)) {
+  if(!is.null(df)) {
 
     # if the input is an sea dataframe then extract the hourly (default) component
     # should add a contigency if no hourly data exists
@@ -47,7 +47,7 @@ make_base_map <- function(df=NULL,lonlim=NULL,latlim=NULL,data_source = 'hourly'
       bathy <- extract_bathy(df)
 
     # Set longitude limits if not prescribed
-    if(is_null(lonlim))
+    if(is.null(lonlim))
       lonlim <- set_ll_lim(df$lon)
 
     # Set latitude limits if not prescribed
@@ -59,18 +59,18 @@ make_base_map <- function(df=NULL,lonlim=NULL,latlim=NULL,data_source = 'hourly'
   coastline <- subset(coastline,long > lonlim[1]-5 & long < lonlim[2]+5 & lat > latlim[1]-5 & lat < latlim[2]+5)
 
   # start ggplot of base map
-  base_map <- ggplot()
+  base_map <- ggplot2::ggplot()
 
   if(plot_bathy) {
     base_map <- base_map +
-      geom_raster(aes(x,y,fill = z), data=bathy, interpolate = TRUE) +
-      scale_fill_gradientn(colors = oce.colorsGebco())
+      ggplot2::geom_raster(ggplot2::aes(x,y,fill = z), data=bathy, interpolate = TRUE) +
+      ggplot2::scale_fill_gradientn(colors = oce.colorsGebco())
   }
 
   base_map <- base_map +
-    geom_polygon(aes(x=long, y = lat, group = group),data=coastline) +
-    coord_quickmap(xlim=lonlim, ylim=latlim, expand = F) +
-    theme_bw()
+    ggplot2::geom_polygon(ggplot2::aes(x=long, y = lat, group = group),data=coastline) +
+    ggplot2::coord_quickmap(xlim=lonlim, ylim=latlim, expand = F) +
+    ggplot2::theme_bw()
 
 #
 #   xlabs <- ggplot_build(base_map)$layout$panel_ranges[[1]]$x.major_source
@@ -154,12 +154,12 @@ make_points <- function(df, var = "temp", data_source = "elg", step = 1, size = 
     stop("Variable not found in data")
   }
 
-  if(!is_null(ran_val)) {
+  if(!is.null(ran_val)) {
     df$val[df$val<ran_val[1]] <- ran_val[1]
     df$val[df$val>ran_val[2]] <- ran_val[2]
   }
 
-  if(!is_null(ran_qua)) {
+  if(!is.null(ran_qua)) {
     quant <- quantile(df$val,ran_qua,na.rm=T)
     df$val[df$val<quant[1]] <- quant[1]
     df$val[df$val>quant[2]] <- quant[2]

@@ -49,13 +49,11 @@ extract_bathy <- function(df, lonran=NULL, latran=NULL) {
   #   scale_fill_gradientn(colors = oce.colorsGebco())
 }
 
-extract__data <- function(df,data_source = 'elg') {
+extract_data <- function(df,data_source = 'elg') {
 
   if(is_sea_struct(df)) {
     df <- select_data(df,data_source)
   }
-
-
 
 
 }
@@ -91,7 +89,7 @@ select_data <- function(df,data_source = 'elg') {
 
   df_names <- names(df)
   if(data_source %in% df_names){
-    if(!is_null(df[[data_source]])) {
+    if(!is.null(df[[data_source]])) {
       out <- df[[data_source]]
     } else {
       stop("No data of this source in data frame")
