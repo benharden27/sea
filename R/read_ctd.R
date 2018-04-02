@@ -31,6 +31,8 @@ read_ctd <- function(cnv_file, pmin = 5, p = 1, ...) {
 
 # Extract metadata --------------------------------------------------------
 
+  # TODO make this more comprehensive
+
   X <- read_cnv_latlon(cnv_file)
 
   line <- grep("Water Depth",X$r)[1]
