@@ -80,11 +80,9 @@ read_ctd_fold <- function(fold, ...) {
 #' @export
 #'
 #' @examples
-make_section <- function(ctd, select = NULL) {
+make_section <- function(ctd, select = 1:length(ctd)) {
 
-  if(!purrr::is_null(select)) {
-     ctd <- ctd[select]
-  }
+  ctd <- ctd[select]
 
   sec <- oce::as.section(ctd)
 
