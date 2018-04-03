@@ -12,3 +12,4 @@ Imports: oce,
     readxl,
     tidyverse,
     lubridate
+Suggests: akima
