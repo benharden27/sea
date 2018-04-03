@@ -12,7 +12,7 @@
 #' @export
 #'
 #' @examples
-plot_section <- function(sec, var = "temperature", var_breaks = NULL, dist_vec = NULL, ylim = c(0,600)) {
+plot_section_ctd <- function(sec, var = "temperature", var_breaks = NULL, dist_vec = NULL, ylim = c(0,600)) {
 
   s <- oce::sectionGrid(sec)
 
@@ -112,7 +112,7 @@ plot_section_map <- function(sec, labels = TRUE, factor = 0.15, ...) {
 #' @export
 #'
 #' @examples
-grid_hydro_section <- function(df, var = "chla", select = NULL,
+grid_section_hydro <- function(df, var = "chla", select = NULL,
                                xo = NULL, yo = NULL, along_path = T) {
 
   stations <- unique(df$station)
