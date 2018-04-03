@@ -179,41 +179,50 @@ read_surfsamp <- function(filein) {
   # read in the surface station data sheet
   df <- read_datasheet(filein)
 
-   # ADD COMPLETE LIST OF ARGUMENTS (INCORPORATE NAMES?)
+  if(is.null(df)) {
+    warning("datasheet empty - continuing")
+    return(df)
+  } else {
 
-  args <- tibble::tribble(~name,~regex,~parse_fun,
-                          "station","^station",readr::parse_character,
-                          "date","^date",readr::parse_integer,
-                          "time","^time",readr::parse_double,
-                          "time_utc","utc.*time",readr::parse_double,
-                          "lon","londec",readr::parse_double,
-                          "lat","latdec",readr::parse_double,
-                          "temp","temp",readr::parse_double,
-                          "sal","sal",readr::parse_double,
-                          "fluor","fluor.*chl",readr::parse_double,
-                          "chla","chl.*a.*g",readr::parse_double,
-                          "chla_vol","chl.*a.*vol",readr::parse_double,
-                          "po4","po4",readr::parse_double,
-                          "no3","no3",readr::parse_double,
-                          "sio2","sio2",readr::parse_double,
-                          "o2","^o2",readr::parse_double,
-                          "pH","ph",readr::parse_double,
-                          "alk","alk",readr::parse_double,
-                          "m_plastics","po4",readr::parse_double,
-                          "notes","notes",readr::parse_character
-                          )
+     # ADD COMPLETE LIST OF ARGUMENTS (INCORPORATE NAMES?)
 
-  output <- parse_datasheet(df,args)
+    args <- tibble::tribble(~name,~regex,~parse_fun,
+                            "station","^station",readr::parse_character,
+                            "date","^date",readr::parse_integer,
+                            "time","^time",readr::parse_double,
+                            "time_utc","utc.*time",readr::parse_double,
+                            "lon","londec",readr::parse_double,
+                            "lat","latdec",readr::parse_double,
+                            "temp","temp",readr::parse_double,
+                            "sal","sal",readr::parse_double,
+                            "fluor","fluor.*chl",readr::parse_double,
+                            "chla","chl.*a.*g",readr::parse_double,
+                            "chla_vol","chl.*a.*vol",readr::parse_double,
+                            "po4","po4",readr::parse_double,
+                            "no3","no3",readr::parse_double,
+                            "sio2","sio2",readr::parse_double,
+                            "o2","^o2",readr::parse_double,
+                            "pH","ph",readr::parse_double,
+                            "alk","alk",readr::parse_double,
+                            "m_plastics","po4",readr::parse_double,
+                            "notes","notes",readr::parse_character
+                            )
 
-  # parse the datetime field
-  output$date <- lubridate::as_date(output$date,origin="1900-1-1")
-  local <- lubridate::as_datetime(output$time*60*60*24)
-  date(local) <- output$date
 
-  df <- tibble::add_column(output,dttm_local = local,.after=1)
+    output <- parse_datasheet(df,args)
+
+    # parse the datetime field
+    output$date <- lubridate::as_date(output$date,origin="1900-1-1")
+    local <- lubridate::as_datetime(output$time*60*60*24)
+    date(local) <- output$date
+
+    df <- tibble::add_column(output,dttm_local = local,.after=1)
+
+
+
+  }
 
   return(df)
-
 }
 
 
