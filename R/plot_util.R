@@ -39,10 +39,10 @@ extract_bathy <- function(df, lonran=NULL, latran=NULL) {
   bathy_vec <- as.vector(bathy)
   bathy_vec[bathy_vec>0] <- 0
   bathy_lon_vec <- rep(bathy_lon,length(bathy_lat))
-  bathy_lat_vec <- unlist(map(bathy_lat,rep,length(bathy_lon)))
+  bathy_lat_vec <- unlist(purrr::map(bathy_lat,rep,length(bathy_lon)))
 
 
-  bathy <- tibble(x=bathy_lon_vec,y=bathy_lat_vec,z=bathy_vec)
+  bathy <- tibble::tibble(x=bathy_lon_vec,y=bathy_lat_vec,z=bathy_vec)
 
   # ggplot() +
   #   geom_raster(aes(x,y,fill = z), data=bathy, interpolate = TRUE) +

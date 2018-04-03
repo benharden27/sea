@@ -64,7 +64,7 @@ make_base_map <- function(df=NULL,lonlim=NULL,latlim=NULL,data_source = 'hourly'
   if(plot_bathy) {
     base_map <- base_map +
       ggplot2::geom_raster(ggplot2::aes(x,y,fill = z), data=bathy, interpolate = TRUE) +
-      ggplot2::scale_fill_gradientn(colors = oce.colorsGebco())
+      ggplot2::scale_fill_gradientn(colors = oce::oce.colorsGebco())
   }
 
   base_map <- base_map +
