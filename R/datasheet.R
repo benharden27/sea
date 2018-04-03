@@ -26,9 +26,9 @@ read_datasheet <- function(filein,sheet=1,n_max=100,range=readxl::cell_cols(1:10
   # The following checks to see if there are no purely numeric values
   # This is the test of an additional header line
   # NB: also works for blank line
-  if(is_empty(str_which(df[1,],"^[0-9\\.]+$"))) {
+  if(length(stringr::str_which(df[1, ], "^[0-9\\.]+$")) == 0) {
 
-    goodcols <- which(!(is.na(df[1,]) & str_detect(colnames(df),"^X__[0-9]+$")))
+    goodcols <- which(!(is.na(df[1,]) & stringr::str_detect(colnames(df),"^X__[0-9]+$")))
     df <- dplyr::select(df,goodcols)
 
     # Can do better than this, but currently this does the job of finding and condensing the two header lines
@@ -39,7 +39,7 @@ read_datasheet <- function(filein,sheet=1,n_max=100,range=readxl::cell_cols(1:10
       tline[topline[i]+(0:diffline[i])] <- stringr::str_c(colnames(df)[topline[i]],".")
     }
 
-    new_heads <- stringr::str_c(tline,str_replace_all(df[1,],"[^0-9A-Za-z]","."))
+    new_heads <- stringr::str_c(tline,stringr::str_replace_all(df[1,],"[^0-9A-Za-z]","."))
 
     df <- df[2:nrow(df),]
     colnames(df) <- new_heads
@@ -49,7 +49,12 @@ read_datasheet <- function(filein,sheet=1,n_max=100,range=readxl::cell_cols(1:10
   # currently done by looking for character lengths that are less than 3, and dont contain either a [A-Z] or [0-9]
 
   keepers <- stringr::str_length(df[[1]])>2
-  df <- dplyr::filter(df,keepers)
+  if (sum(keepers,na.rm=T) > 0) {
+    df <- dplyr::filter(df,keepers)
+  } else {
+    df <- NULL
+  }
+
 
 }
 
@@ -122,7 +127,7 @@ read_neuston <- function(filein) {
                           "plas_pellets","^plastic.*pellet",readr::parse_integer,
                           "tar","^tar",readr::parse_integer
                           )
-  args_in <- as_tibble(list(df=list(df),regex=args$regex,parse_fun=args$parse_fun))
+  args_in <- tibble::as_tibble(list(df=list(df),regex=args$regex,parse_fun=args$parse_fun))
   namelist <- purrr::as_vector(dplyr::select(args,name))
 
   # Work out how to pass format arguments or just post-process afterward
@@ -234,12 +239,12 @@ read_hydrocast <- function(filein) {
   args <- tibble::tribble(~name,~regex,~parse_fun,
                           "station","^station",readr::parse_character,
                           "date","^date",readr::parse_integer,
-                          "time","^start",readr::parse_double,
+                          "time",c("^start","^time"),readr::parse_double,
                           "lon","londec",readr::parse_double,
                           "lat","latdec",readr::parse_double,
                           "temp_surf","temp",readr::parse_double,
                           "sal_surf","sal",readr::parse_double,
-                          "fluor_surf","fluor.*chl",readr::parse_double,
+                          "fluor_surf",c("fluor.*chl","chl.*fluor"),readr::parse_double,
                           "bottle","bottle",readr::parse_character,
                           "z","z.*corr",readr::parse_double,
                           "temp","temp.*deg",readr::parse_double,
@@ -259,7 +264,7 @@ read_hydrocast <- function(filein) {
 
   output$date <- lubridate::as_date(output$date,origin="1900-1-1")
   local <- lubridate::as_datetime(output$time*60*60*24)
-  date(local) <- output$date
+  lubridate::date(local) <- output$date
   df <- tibble::add_column(output,dttm = local,.after=1)
 
 }

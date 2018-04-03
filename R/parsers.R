@@ -102,7 +102,7 @@ parse_lat <- function(latin) {
 parse_datasheet <- function(df,args) {
 
   # create args to be passes to pmap
-  args_in <- as_tibble(list(df=list(df),regex=args$regex,parse_fun=args$parse_fun))
+  args_in <- tibble::as_tibble(list(df=list(df),regex=args$regex,parse_fun=args$parse_fun))
 
   output <- purrr::pmap(args_in,parse_field)
 
