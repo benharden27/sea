@@ -70,29 +70,34 @@ make_base_map <- function(df=NULL,lonlim=NULL,latlim=NULL,data_source = 'hourly'
   base_map <- base_map +
     ggplot2::geom_polygon(ggplot2::aes(x=long, y = lat, group = group),data=coastline) +
     ggplot2::coord_quickmap(xlim=lonlim, ylim=latlim, expand = F) +
+    ggplot2::xlab("Longitude") +
+    ggplot2::ylab("Latitude") +
     ggplot2::theme_bw()
 
 #
-#   xlabs <- ggplot_build(base_map)$layout$panel_ranges[[1]]$x.major_source
-#   ylabs <- ggplot_build(base_map)$layout$panel_ranges[[1]]$y.major_source
+  xlabs <- ggplot2::ggplot_build(base_map)$layout$panel_ranges[[1]]$x.major_source
+  ylabs <- ggplot2::ggplot_build(base_map)$layout$panel_ranges[[1]]$y.major_source
 #
-#   if (mean(xlabs, na.rm = T) < 0) {
-#     xlabs <- paste0(abs(xlabs),"^o^W")
-#   } else {
-#     xlabs[xlabs>180] <- paste0(360-xlabs[xlabs>180],"^o^W")
-#     xlabs[xlabs<=180] <- paste0(xlabs[xlabs<=180],"^o^E")
-#   }
+  xlabs_old <- xlabs
+  ylabs_old <- ylabs
+
+  if (mean(xlabs, na.rm = T) < 0) {
+    xlabs <- paste0(abs(xlabs),"oW")
+  } else {
+    xlabs[xlabs_old>180] <- paste0(360-xlabs_old[xlabs_old>180],"oW")
+    xlabs[xlabs_old<=180] <- paste0(xlabs_old[xlabs_old<=180],"oE")
+  }
 #
-#   if(mean(ylabs,na.rm=T) > 0) {
-#     ylabs <- paste0(ylabs,"^o^N")
-#   } else {
-#     ylabs <- paste0(abs(ylabs),"^o^S")
-#   }
+  if(mean(ylabs,na.rm=T) > 0) {
+    ylabs <- paste0(ylabs,"oN")
+  } else {
+    ylabs <- paste0(abs(ylabs),"oS")
+  }
+
 #
-#
-#   base_map <- base_map +
-#     scale_x_continuous(labels = xlabs) +
-#     scale_y_continuous(labels = ylabs)
+  base_map <- base_map +
+    ggplot2::scale_x_continuous(breaks = xlabs_old, labels = xlabs) +
+    ggplot2::scale_y_continuous(breaks = ylabs_old, labels = ylabs)
 
 
   return(base_map)
