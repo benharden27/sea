@@ -90,7 +90,7 @@ plot_section_map <- function(sec, labels = TRUE, factor = 0.15, ...) {
   latlim <- set_ll_lim(latctd, factor)
 
   m <- make_base_map(lonlim = lonlim, latlim = latlim, ...) +
-    ggplot2::geom_point(ggplot2::aes(lonctd, latctd))
+    ggplot2::geom_point(ggplot2::aes(lonctd, latctd), data = data.frame(lonctd,latctd))
 
   if(labels == TRUE) {
     label <- sec@metadata$stationId
@@ -99,5 +99,52 @@ plot_section_map <- function(sec, labels = TRUE, factor = 0.15, ...) {
   } else {
     m
   }
+
+}
+
+
+#' Grid a bottle derived value
+#'
+#' @param df data frame read in using read_hydrocast
+#' @param var
+#'
+#' @return
+#' @export
+#'
+#' @examples
+grid_hydro_section <- function(df, var = "chla", select = NULL,
+                               xo = NULL, yo = NULL, along_path = T) {
+
+  stations <- unique(df$station)
+
+  if(is.null(select)) {
+    select <- 1:length(stations)
+  }
+
+  sti <- df$station %in% stations[select]
+
+  lonloc <- df$lon[sti]
+  latloc <- df$lat[sti]
+
+  if (along_path) {
+    dist <- oce::geodDist(lonloc, latloc, alongPath = T)
+  } else {
+    dist <- oce::geodDist(lonloc, latloc, lonloc[1], latloc[1])
+  }
+
+  if(is.null(xo))
+    xo <- seq(0, max(dist, na.rm = TRUE), 5)
+
+  if(is.null(yo))
+    yo <- seq(5, 600, 50)
+
+
+  df <- dplyr::mutate(df[sti, ], dist = dist)
+
+  ran <- !is.na(df[[var]])
+
+  z <- akima::interp(df$dist[ran], df$z[ran], df[[var]][ran],
+                       xo = xo, yo = yo, linear = TRUE)
+
 
 }
