@@ -2,14 +2,21 @@
 #' Find index of nearest value in vector
 #'
 #' @param vec
-#' @param val
+#' @param vals
 #'
 #' @return
 #' @export
 #'
 #' @examples
-find_near <- function(vec,val) {
-  which.min(abs(vec-val))
+find_near <- function(vec,vals) {
+
+  locs <- rep(NA,length(vals))
+  for (i in 1:length(vals)) {
+    locs[i] <- which.min(abs(vec-vals[i]))
+  }
+
+  return(locs)
+
 }
 
 
