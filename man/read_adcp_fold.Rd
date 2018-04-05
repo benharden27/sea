@@ -4,7 +4,7 @@
 \alias{read_adcp_fold}
 \title{Read adcp files from a folder}
 \usage{
-read_adcp_fold(adcp_fold, pattern = "1-30")
+read_adcp_fold(adcp_fold, stack = T)
 }
 \arguments{
 \item{pattern}{}
