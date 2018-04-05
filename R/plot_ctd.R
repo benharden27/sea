@@ -1,6 +1,6 @@
 # Functions for plotting CTD data
 
-#' Plot a CTD section
+#' Plot a section
 #'
 #' @param sec section object made using make_section (or oce functions)
 #' @param var variable name to plot
@@ -12,61 +12,40 @@
 #' @export
 #'
 #' @examples
-plot_section_ctd <- function(sec, var = "temperature", var_breaks = NULL, dist_vec = NULL, ylim = c(0,600)) {
+plot_section <- function(X, var_breaks = NULL, dist_vec = NULL, ylim = c(0,600)) {
 
-  s <- oce::sectionGrid(sec)
+  di <- find_near(X$d,ylim[1]):find_near(X$d,ylim[2])
 
-  nstation <- length(s[['station']])
-  latctd <- s@metadata$latitude
-  lonctd <- s@metadata$longitude
-
-  p <- unique(s[['pressure']])
-  d <- oce::swDepth(p, mean(latctd, na.rm = TRUE))
-  di = c(find_near(d, ylim[1]):find_near(d,ylim[2]))
-
-  # Set up v arrays for plotting
-  v <- array(NA, dim = c(nstation, length(p)))
-  for (i in 1:nstation) {
-    v[i, ] <- s[['station']][[i]][[var]]
-  }
-
-  # cut data below ylims
-  v <- v[ ,di]
-  d <- d[di]
-
-  if(is.null(dist_vec)) {
-    dist <- oce::geodDist(sec, alongPath=T)
+  if(is.list(X$var)) {
+    X$var <-  X$var$u[ ,di]
   } else {
-    dist <- dist_vec
-  }
-
-  if (check_antimerid(data.frame(lon = lonctd))) {
-    lonctd[lonctd<0] <- lonctd[lonctd<0]+360
+    X$var <- X$var[ ,di]
+    X$d <- X$d[di]
   }
 
   # set up plotting ranges
   if(is.null(var_breaks)) {
-    var_breaks <- pretty(v,n = 10)
+    var_breaks <- pretty(X$var,n = 20)
   }
 
   # Create the colormaps
-  var_cm <- oce::colormap(v, breaks = var_breaks, col = oce::oceColorsTemperature)
+  var_cm <- oce::colormap(X$var, breaks = var_breaks, col = oce::oceColorsTemperature)
 
   # Plot temperature and add labels and profile lines
-  imagep(dist, d, v, colormap = var_cm, flipy = TRUE, ylab = 'Depth [m]',
-         filledContour = TRUE, zlab = var, missingColor = NULL,
-         drawTriangles = T, ylim = ylim,
-         zlabPosition = 'side')
+  oce::imagep(X$x, X$d, X$var, colormap = var_cm, flipy = TRUE, ylab = 'Depth [m]',
+              filledContour = TRUE, missingColor = NULL,
+              drawTriangles = T, ylim = ylim,
+              zlabPosition = 'side')
 
-  # Add lines and labels
-  cur <- 1
-  for (i in 1:length(dist)){
-    lines(dist[c(i,i)], c(0, max(sec[['station']][[i]][['depth']], na.rm = TRUE)), col = 'gray')
-    # if (i==1 | geodDist(lonctd[cur], latctd[cur], lonctd[i], latctd[i]) > distmin) {
-      mtext(s@metadata$stationId[i], 3 , 0 , at = dist[i])
-      # cur <- i
-    # }
-  }
+  # # Add lines and labels
+  # cur <- 1
+  # for (i in 1:length(dist)){
+  #   lines(dist[c(i,i)], c(0, max(sec[['station']][[i]][['depth']], na.rm = TRUE)), col = 'gray')
+  #   # if (i==1 | geodDist(lonctd[cur], latctd[cur], lonctd[i], latctd[i]) > distmin) {
+  #     mtext(s@metadata$stationId[i], 3 , 0 , at = dist[i])
+  #     # cur <- i
+  #   # }
+  # }
 
 }
 
@@ -103,7 +82,53 @@ plot_section_map <- function(sec, labels = TRUE, factor = 0.15, ...) {
 }
 
 
-#' Grid a bottle derived value
+
+
+#' Prepare ctd objects to plot as a section
+#'
+#' @param sec ctd list or section object to make into section
+#' @param var variable to plot
+#'
+#' @return
+#' @export
+#'
+#' @examples
+prep_section_ctd <- function(sec, var = "temperature", dist_vec = NULL, along_path = T) {
+
+  if(is.list(sec)) {
+    sec <- make_section(sec)
+  }
+
+  s <- oce::sectionGrid(sec)
+
+  nstation <- length(s[['station']])
+  latctd <- s@metadata$latitude
+  lonctd <- s@metadata$longitude
+
+  p <- unique(s[['pressure']])
+  d <- oce::swDepth(p, mean(latctd, na.rm = TRUE))
+
+  # Set up v arrays for plotting
+  v <- array(NA, dim = c(nstation, length(p)))
+  for (i in 1:nstation) {
+    v[i, ] <- s[['station']][[i]][[var]]
+  }
+
+  if(is.null(dist_vec)) {
+    if(along_path) {
+      dist <- oce::geodDist(sec, alongPath=T)
+    } else {
+      dist <- oce::geodDist(sec)
+    }
+  } else {
+    dist <- dist_vec
+  }
+
+  X <- list(lon = lonctd, lat = latctd, d = d, x = dist, var = v, type = "ctd")
+
+}
+
+#' Prepare bottle-derived data to plot
 #'
 #' @param df data frame read in using read_hydrocast
 #' @param var
@@ -112,8 +137,8 @@ plot_section_map <- function(sec, labels = TRUE, factor = 0.15, ...) {
 #' @export
 #'
 #' @examples
-grid_section_hydro <- function(df, var = "chla", select = NULL,
-                               xo = NULL, yo = NULL, along_path = T) {
+prep_section_hydro <- function(df, var = "chla", select = NULL,
+                               xo = NULL, yo = NULL, along_path = T, dist_vec = NULL) {
 
   stations <- unique(df$station)
 
@@ -126,18 +151,21 @@ grid_section_hydro <- function(df, var = "chla", select = NULL,
   lonloc <- df$lon[sti]
   latloc <- df$lat[sti]
 
-  if (along_path) {
-    dist <- oce::geodDist(lonloc, latloc, alongPath = T)
+  if(is.null(dist_vec)) {
+    if (along_path) {
+      dist <- oce::geodDist(lonloc, latloc, alongPath = T)
+    } else {
+      dist <- oce::geodDist(lonloc, latloc, lonloc[1], latloc[1])
+    }
   } else {
-    dist <- oce::geodDist(lonloc, latloc, lonloc[1], latloc[1])
+    dist <- dist_vec
   }
 
   if(is.null(xo))
-    xo <- seq(0, max(dist, na.rm = TRUE), 5)
+    xo <- pretty(dist,n = floor(length(stations)*2), n_min = length(stations))
 
   if(is.null(yo))
     yo <- seq(5, 600, 50)
-
 
   df <- dplyr::mutate(df[sti, ], dist = dist)
 
@@ -146,5 +174,59 @@ grid_section_hydro <- function(df, var = "chla", select = NULL,
   z <- akima::interp(df$dist[ran], df$z[ran], df[[var]][ran],
                        xo = xo, yo = yo, linear = TRUE)
 
+  X = list(lon = lonloc, lat = latloc, x = z$x, d = z$y, var = z$z , type = "hydro")
 
 }
+
+
+
+#' Prepare ADCP data for plotting section
+#'
+#' @param X
+#' @param sec_lon two point vector c(starting lon, ending lon)
+#' @param sec_lat two point vector c(starting lat, ending lat)
+#' @param dx distance between interpolated points along section in km
+#' @param width width around which to gather data in km
+#'
+#' @return
+#' @export
+#'
+#' @examples
+prep_section_adcp <- function(X, sec_lon = NULL, sec_lat = NULL, dx = 5, width = 10) {
+
+  if(is.null(sec_lon)) {
+    sec_lon <- X$lon
+  }
+
+  if(is.null(sec_lat))
+    sec_lat <- X$lat
+
+  tot_dist <- oce::geodDist(sec_lon,sec_lat,alongPath = T)
+  n <- ceiling(diff(range(tot_dist)) / dx)
+  dist <- seq(tot_dist[1],tail(tot_dist,1),length.out = n)
+
+  lonsec <- approx(1:length(sec_lon), sec_lon, n = n)$y
+  latsec <- approx(1:length(sec_lat), sec_lat, n = n)$y
+
+  dist_to_sec <- sec_loc <- rep(NA,length(X$lon))
+  for (i in 1:length(X$lon)) {
+    d <- oce::geodDist(lonsec,latsec,X$lon[i],X$lat[i])
+    sec_loc[i] <- which.min(d)
+    dist_to_sec[i] <- d[sec_loc[i]]
+  }
+
+  sec_loc[dist_to_sec > width/2] <- NA
+
+  u <- v <- matrix(NA, n, dim(X$u)[2])
+  for (i in unique(sec_loc[!is.na(sec_loc)])) {
+    u[i, ] <- colMeans(X$u[sec_loc==i, ],na.rm = T)
+    v[i, ] <- colMeans(X$v[sec_loc==i, ],na.rm = T)
+  }
+
+  X <- list(lon = lonsec, lat = latsec, d = seq(10,600, length.out = 60), x = dist, var = list(u=u,v=v), type = "adcp")
+
+
+}
+
+
+
