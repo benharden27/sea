@@ -4,10 +4,10 @@
 \alias{find_near}
 \title{Find index of nearest value in vector}
 \usage{
-find_near(vec, val)
+find_near(vec, vals)
 }
 \arguments{
-\item{val}{}
+\item{vals}{}
 }
 \description{
 Find index of nearest value in vector
