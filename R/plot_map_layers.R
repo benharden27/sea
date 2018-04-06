@@ -75,23 +75,26 @@ make_base_map <- function(df=NULL,lonlim=NULL,latlim=NULL,data_source = 'hourly'
     ggplot2::theme_bw()
 
 #
-  xlabs <- ggplot2::ggplot_build(base_map)$layout$panel_ranges[[1]]$x.major_source
-  ylabs <- ggplot2::ggplot_build(base_map)$layout$panel_ranges[[1]]$y.major_source
-#
+  xlabs <- pretty(df$lon)
+  ylabs <- pretty(df$lat)
+
+#   xlabs <- ggplot2::ggplot_build(base_map)$layout$panel_ranges[[1]]$x.major_source
+#   ylabs <- ggplot2::ggplot_build(base_map)$layout$panel_ranges[[1]]$y.major_source
+# #
   xlabs_old <- xlabs
   ylabs_old <- ylabs
 
   if (mean(xlabs, na.rm = T) < 0) {
-    xlabs <- paste0(abs(xlabs),"oW")
+    xlabs <- paste0(abs(xlabs),"ºW")
   } else {
-    xlabs[xlabs_old>180] <- paste0(360-xlabs_old[xlabs_old>180],"oW")
-    xlabs[xlabs_old<=180] <- paste0(xlabs_old[xlabs_old<=180],"oE")
+    xlabs[xlabs_old>180] <- paste0(360-xlabs_old[xlabs_old>180],"ºW")
+    xlabs[xlabs_old<=180] <- paste0(xlabs_old[xlabs_old<=180],"ºE")
   }
 #
   if(mean(ylabs,na.rm=T) > 0) {
-    ylabs <- paste0(ylabs,"oN")
+    ylabs <- paste0(ylabs,"ºN")
   } else {
-    ylabs <- paste0(abs(ylabs),"oS")
+    ylabs <- paste0(abs(ylabs),"ºS")
   }
 
 #
