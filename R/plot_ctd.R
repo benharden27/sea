@@ -12,41 +12,48 @@
 #' @export
 #'
 #' @examples
-plot_section <- function(X, var = "temp", select = NULL, dist_vec = NULL,
-                         var_breaks = NULL, ylim = c(0,600),
-                         along_section = F, sec_lon = NULL, sec_lat = NULL,
-                         dx = 5, dz = 25, width = 10) {
-
-  if(class(X[[1]]) == "ctd" | class(X) == "section") {
-    X <- prep_section_ctd(X, var = var, dist_vec = dist_vec, along_path = along_path)
-  } else if (is.data.frame(df)) {
-    X <- prep_section_hydro(X, var = var, select = NULL, xo = xo, yo = yo, along_path = along_path, dist_vec = dist_vec)
-  } else if (class(X) == "list") {
-    X <- prep_section_adcp(X, sec_lon = sec_lon ,sec_lat = sec_lat, dx = dx, width = width)
-  }
-
+plot_section <- function(X, adcp_var = "u", breaks = NULL, zlim = NULL, ylim = c(0,600)) {
 
   di <- find_near(X$d,ylim[1]):find_near(X$d,ylim[2])
 
-  if(is.list(X$var)) {
-    X$var <-  X$var$u[ ,di]
+  if(X$type == "adcp") {
+    if(adcp_var == "u") {
+      X$var <- X$var$u[ , di]
+    } else {
+      X$var <- X$var$v[ , di]
+    }
   } else {
     X$var <- X$var[ ,di]
     X$d <- X$d[di]
   }
 
+  if(!is.null(zlim)) {
+    X$var[X$var < zlim[1]] <- zlim[1]
+    X$var[X$var > zlim[2]] <- zlim[2]
+  }
+
   # set up plotting ranges
-  if(is.null(var_breaks)) {
-    var_breaks <- pretty(X$var,n = 20)
+  if(is.null(breaks)) {
+    if (X$type == 'adcp') {
+      abs_max <- max(abs(X$var),na.rm = T)
+      breaks <- pretty(c(-abs_max,abs_max),n = 20)
+    } else {
+      breaks <- pretty(X$var,n = 20)
+    }
   }
 
   # Create the colormaps
-  var_cm <- oce::colormap(X$var, breaks = var_breaks, col = oce::oceColorsTemperature)
+  if(X$type == "adcp") {
+    var_cm <- oce::colormap(X$var, breaks = breaks, col = oce::oce.colorsVelocity)
+  } else {
+    var_cm <- oce::colormap(X$var, breaks = breaks, col = oce::oceColorsTemperature)
+  }
+
 
   # Plot temperature and add labels and profile lines
   oce::imagep(X$x, X$d, X$var, colormap = var_cm, flipy = TRUE, ylab = 'Depth [m]',
               filledContour = TRUE, missingColor = NULL,
-              drawTriangles = T, ylim = ylim,
+              drawTriangles = T, ylim = ylim, zlim = zlim,
               zlabPosition = 'side')
 
   # # Add lines and labels
@@ -72,24 +79,20 @@ plot_section <- function(X, var = "temp", select = NULL, dist_vec = NULL,
 #' @export
 #'
 #' @examples
-plot_section_map <- function(sec, labels = TRUE, factor = 0.15, ...) {
+plot_section_map <- function(X, labels = TRUE, factor = 0.15) {
 
-  latctd <- sec@metadata$latitude
-  lonctd <- sec@metadata$longitude
+  lonlim <- set_ll_lim(X$data_lon, factor)
+  latlim <- set_ll_lim(X$data_lat, factor)
 
-  lonlim <- set_ll_lim(lonctd, factor)
-  latlim <- set_ll_lim(latctd, factor)
+  m <- make_base_map(lonlim = lonlim, latlim = latlim) +
+    ggplot2::geom_point(ggplot2::aes(X$data_lon, X$data_lat))
 
-  m <- make_base_map(lonlim = lonlim, latlim = latlim, ...) +
-    ggplot2::geom_point(ggplot2::aes(lonctd, latctd), data = data.frame(lonctd,latctd))
-
-  if(labels == TRUE) {
-    label <- sec@metadata$stationId
-    m + ggplot2::geom_text(ggplot2::aes(lonctd, latctd, label = label),
-                           nudge_x = diff(lonlim)/30, hjust = "left")
-  } else {
-    m
+  if (!is.null(X$sec_lon)) {
+    m <- m +
+      ggplot2::geom_line(ggplot2::aes(X$sec_lon,X$sec_lat), color = "red")
   }
+
+  m
 
 }
 
@@ -174,7 +177,8 @@ prep_section_ctd <- function(sec, var = "temperature", select = NULL, dist_vec =
     dist <- dist_vec
   }
 
-  X <- list(data_lon = lonctd, data_lat = latctd, sec_lon = sec_lon, sec_lat = sec_lat,
+  X <- list(data_lon = lonctd, data_lat = latctd, along_section = along_section,
+            sec_lon = sec_lon, sec_lat = sec_lat,
             dist_vec = dist_vec, width = width, dx = dx, dz = dz,
             d = d, x = dist, var = v, name = var, type = "ctd")
 
@@ -276,7 +280,8 @@ prep_section_hydro <- function(df, var = "chla", select = NULL, dist_vec = NULL,
   # z <- akima::interp(df$dist[ran], df$z[ran], df[[var]][ran],
   #                      xo = xo, yo = yo, linear = TRUE)
 
-  X = list(data_lon = lonloc, data_lat = latloc, sec_lon = sec_lon, sec_lat = sec_lat,
+  X = list(data_lon = lonloc, data_lat = latloc, along_section = along_section,
+           sec_lon = sec_lon, sec_lat = sec_lat,
            dist_vec = dist_vec, width = width, dx = dx, dz = dz,
            d = d, x = dist, var = v, name = var, type = "hydro")
 }
@@ -362,9 +367,10 @@ prep_section_adcp <- function(X, select = NULL, dist_vec = NULL,
     dist <- dist_vec
   }
 
-  X <- list(data_lon = X$lon, data_lat = X$lat, sec_lon = sec_lon, sec_lat = sec_lat,
-           dist_vec = dist_vec, width = width, dx = dx, dz = dz,
-           d = seq(10,600, length.out = 60), x = dist, var = list(u=u,v=v), name = "current", type = "adcp")
+  X <- list(data_lon = X$lon, data_lat = X$lat, along_section = along_section,
+            sec_lon = sec_lon, sec_lat = sec_lat,
+            dist_vec = dist_vec, width = width, dx = dx, dz = dz,
+            d = seq(10,600, length.out = 60), x = dist, var = list(u=u,v=v), name = "current", type = "adcp")
 
 }
 
