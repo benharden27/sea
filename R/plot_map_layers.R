@@ -75,9 +75,13 @@ make_base_map <- function(df=NULL,lonlim=NULL,latlim=NULL,data_source = 'hourly'
     ggplot2::theme_bw()
 
 #
-  xlabs <- pretty(df$lon)
-  ylabs <- pretty(df$lat)
-
+  if(is.null(df)) {
+    xlabs <- pretty(lonlim)
+    ylabs <- pretty(latlim)
+  } else {
+    xlabs <- pretty(df$lon)
+    ylabs <- pretty(df$lat)
+  }
 #   xlabs <- ggplot2::ggplot_build(base_map)$layout$panel_ranges[[1]]$x.major_source
 #   ylabs <- ggplot2::ggplot_build(base_map)$layout$panel_ranges[[1]]$y.major_source
 # #
