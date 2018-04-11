@@ -79,16 +79,23 @@ plot_section <- function(X, adcp_var = "u", breaks = NULL, zlim = NULL, ylim = c
 #' @export
 #'
 #' @examples
-plot_section_map <- function(X, labels = TRUE, factor = 0.15) {
+plot_section_map <- function(X, factor = 0.15) {
 
-  lonlim <- set_ll_lim(X$data_lon, factor)
-  latlim <- set_ll_lim(X$data_lat, factor)
+  if (!is.null(X$sec_lon)) {
+    box <- generate_swath(X$sec_lon,X$sec_lat,X$width)
+  } else {
+    box = data.frame(lon = NULL, lat = NULL)
+  }
+
+  lonlim <- set_ll_lim(c(X$data_lon,box$lon), factor)
+  latlim <- set_ll_lim(c(X$data_lat,box$lat), factor)
 
   m <- make_base_map(lonlim = lonlim, latlim = latlim) +
     ggplot2::geom_point(ggplot2::aes(X$data_lon, X$data_lat))
 
   if (!is.null(X$sec_lon)) {
     m <- m +
+      ggplot2::geom_polygon(ggplot2::aes(lon,lat), data = box, fill = 'grey30', alpha = .5) +
       ggplot2::geom_line(ggplot2::aes(X$sec_lon,X$sec_lat), color = "red")
   }
 
@@ -342,15 +349,15 @@ prep_section_adcp <- function(X, select = NULL, dist_vec = NULL,
         u[i, ] <- rep(NA, dim(X$u)[2])
         v[i, ] <- rep(NA, dim(X$u)[2])
       } else if (sum(distloc==dist[i],na.rm = T) == 1) {
-        u[i, ] <- X$u[ii, ]
-        v[i, ] <- X$v[ii, ]
+        u[i, ] <- colMeans(X$u[ii, ], na.rm = T)
+        v[i, ] <- colMeans(X$v[ii, ], na.rm = T)
       } else {
         u[i, ] <- colMeans(X$u[ii, ],na.rm = T)
         v[i, ] <- colMeans(X$v[ii, ],na.rm = T)
       }
     }
 
-    sti <- rowSums(!is.na(Y$var$u)) != 0
+    sti <- rowSums(!is.na(u)) != 0
 
     u <- u[sti, ]
     v <- v[sti, ]

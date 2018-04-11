@@ -4,14 +4,14 @@
 \alias{plot_section_map}
 \title{Plot a map of ctd section locations}
 \usage{
-plot_section_map(sec, labels = TRUE, factor = 0.15, ...)
+plot_section_map(X, factor = 0.15)
 }
 \arguments{
+\item{factor}{scale factor passed to set_ll_lim for setting range of plot}
+
 \item{sec}{section object to plot}
 
 \item{labels}{logical as to whether station IDs should be printed}
-
-\item{factor}{scale factor passed to set_ll_lim for setting range of plot}
 
 \item{...}{additional arguments to pass to make_section_map}
 }
