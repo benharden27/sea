@@ -4,9 +4,13 @@
 \alias{plot_section}
 \title{Plot a section}
 \usage{
-plot_section(X, var_breaks = NULL, dist_vec = NULL, ylim = c(0, 600))
+plot_section(X, var = "temp", select = NULL, dx = 5, width = 10,
+  xo = NULL, yo = NULL, sec_lon = NULL, sec_lat = NULL,
+  var_breaks = NULL, dist_vec = NULL, along_path = T, ylim = c(0, 600))
 }
 \arguments{
+\item{var}{variable name to plot}
+
 \item{var_breaks}{breaks for plotting}
 
 \item{dist_vec}{alternative distance vector for plotting}
@@ -14,8 +18,6 @@ plot_section(X, var_breaks = NULL, dist_vec = NULL, ylim = c(0, 600))
 \item{ylim}{depth range to plot}
 
 \item{sec}{section object made using make_section (or oce functions)}
-
-\item{var}{variable name to plot}
 }
 \description{
 Plot a section

@@ -12,7 +12,16 @@
 #' @export
 #'
 #' @examples
-plot_section <- function(X, var_breaks = NULL, dist_vec = NULL, ylim = c(0,600)) {
+plot_section <- function(X, var = "temp", select = NULL, dx = 5, width = 10, xo = NULL, yo = NULL, sec_lon = NULL, sec_lat = NULL, var_breaks = NULL, dist_vec = NULL, along_path = T, ylim = c(0,600)) {
+
+  if(class(X[[1]]) == "ctd" | class(X) == "section") {
+    X <- prep_section_ctd(X, var = var, dist_vec = dist_vec, along_path = along_path)
+  } else if (is.data.frame(df)) {
+    X <- prep_section_hydro(X, var = var, select = NULL, xo = xo, yo = yo, along_path = along_path, dist_vec = dist_vec)
+  } else if (class(X) == "list") {
+    X <- prep_section_adcp(X, sec_lon = sec_lon ,sec_lat = sec_lat, dx = dx, width = width)
+  }
+
 
   di <- find_near(X$d,ylim[1]):find_near(X$d,ylim[2])
 
@@ -93,13 +102,17 @@ plot_section_map <- function(sec, labels = TRUE, factor = 0.15, ...) {
 #' @export
 #'
 #' @examples
-prep_section_ctd <- function(sec, var = "temperature", dist_vec = NULL, along_path = T) {
+prep_section_ctd <- function(sec, var = "temperature", select = NULL, dist_vec = NULL, along_path = T) {
 
-  if(is.list(sec)) {
+  if(is.list(sec))
     sec <- make_section(sec)
-  }
 
-  s <- oce::sectionGrid(sec)
+  if(is.null(select))
+    select <- 1:length(sec@metadata$stationId)
+
+  s <- subset(sec, select %in% stationId)
+
+  # s <- oce::sectionGrid(sec)
 
   nstation <- length(s[['station']])
   latctd <- s@metadata$latitude

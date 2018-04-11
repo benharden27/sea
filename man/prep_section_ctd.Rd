@@ -4,7 +4,7 @@
 \alias{prep_section_ctd}
 \title{Prepare ctd objects to plot as a section}
 \usage{
-prep_section_ctd(sec, var = "temperature", dist_vec = NULL,
+prep_section_ctd(sec, var = "temperature", select = NULL, dist_vec = NULL,
   along_path = T)
 }
 \arguments{
