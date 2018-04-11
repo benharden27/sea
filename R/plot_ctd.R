@@ -148,7 +148,7 @@ prep_section_ctd <- function(sec, var = "temperature", select = NULL, dist_vec =
     distctd <- rep(NA,length(lonctd))
     for (i in 1:length(latctd)) {
       dist_to_section <- min(oce::geodDist(sec_lon,sec_lat,lonctd[i],latctd[i]))
-      if(dist_to_section < width) {
+      if(dist_to_section < width/2) {
         distctd[i] <- dist[which.min(oce::geodDist(sec_lon,sec_lat,lonctd[i],latctd[i]))]
       }
     }
@@ -228,7 +228,7 @@ prep_section_hydro <- function(df, var = "chla", select = NULL, dist_vec = NULL,
     distloc <- rep(NA,length(lonloc))
     for (i in 1:length(lonloc)) {
       dist_to_section <- min(oce::geodDist(sec_lon,sec_lat,lonloc[i],latloc[i]))
-      if(dist_to_section < width) {
+      if(dist_to_section < width/2) {
         distloc[i] <- dist[which.min(oce::geodDist(sec_lon,sec_lat,lonloc[i],latloc[i]))]
       }
     }
@@ -295,39 +295,76 @@ prep_section_hydro <- function(df, var = "chla", select = NULL, dist_vec = NULL,
 #' @export
 #'
 #' @examples
-prep_section_adcp <- function(X, sec_lon = NULL, sec_lat = NULL, dx = 5, width = 10) {
+prep_section_adcp <- function(X, select = NULL, dist_vec = NULL,
+                              along_section = F, sec_lon = NULL, sec_lat = NULL,
+                              dx = 5, dz = 25, width = 10) {
 
-  if(is.null(sec_lon)) {
-    sec_lon <- X$lon
+  if(!is.null(select)) {
+    X$lon <- X$lon[select]
+    X$lat <- X$lat[select]
+    X$dttm <- X$dttm[select]
+    X$u <- X$u[select, ]
+    X$v <- X$v[select, ]
   }
 
-  if(is.null(sec_lat))
-    sec_lat <- X$lat
+  if (along_section == T) {
 
-  tot_dist <- oce::geodDist(sec_lon,sec_lat,alongPath = T)
-  n <- ceiling(diff(range(tot_dist)) / dx)
-  dist <- seq(tot_dist[1],tail(tot_dist,1),length.out = n)
+    if(is.null(sec_lon))
+      sec_lon <- X$lon[c(1,length(X$lon))]
 
-  lonsec <- approx(1:length(sec_lon), sec_lon, n = n)$y
-  latsec <- approx(1:length(sec_lat), sec_lat, n = n)$y
+    if(is.null(sec_lat))
+      sec_lat <- X$lat[c(1,length(X$lat))]
 
-  dist_to_sec <- sec_loc <- rep(NA,length(X$lon))
-  for (i in 1:length(X$lon)) {
-    d <- oce::geodDist(lonsec,latsec,X$lon[i],X$lat[i])
-    sec_loc[i] <- which.min(d)
-    dist_to_sec[i] <- d[sec_loc[i]]
+    tot_dist <- oce::geodDist(sec_lon,sec_lat,alongPath = T)
+    n <- ceiling(diff(range(tot_dist)) / dx * 5)
+    sec_lon <- seq(sec_lon[1],sec_lon[2],length.out = n)
+    sec_lat <- seq(sec_lat[1],sec_lat[2],length.out = n)
+    dist <- oce::geodDist(sec_lon,sec_lat,alongPath = T)
+
+    # find nearest section vector point to each CTD and assign that loaction to the CTD
+    distloc <- rep(NA,length(X$lon))
+    for (i in 1:length(X$lon)) {
+      dist_to_section <- min(oce::geodDist(sec_lon,sec_lat,X$lon[i],X$lat[i]))
+      if(dist_to_section < width/2) {
+        distloc[i] <- dist[which.min(oce::geodDist(sec_lon,sec_lat,X$lon[i],X$lat[i]))]
+      }
+    }
+
+    u <- v <- matrix(NA, n, dim(X$u)[2])
+    for (i in 1:n) {
+      ii <- distloc == dist[i]
+      if (sum(distloc==dist[i],na.rm = T) == 0) {
+        u[i, ] <- rep(NA, dim(X$u)[2])
+        v[i, ] <- rep(NA, dim(X$u)[2])
+      } else if (sum(distloc==dist[i],na.rm = T) == 1) {
+        u[i, ] <- X$u[ii, ]
+        v[i, ] <- X$v[ii, ]
+      } else {
+        u[i, ] <- colMeans(X$u[ii, ],na.rm = T)
+        v[i, ] <- colMeans(X$v[ii, ],na.rm = T)
+      }
+    }
+
+    sti <- rowSums(!is.na(Y$var$u)) != 0
+
+    u <- u[sti, ]
+    v <- v[sti, ]
+    dist_vec = dist[sti]
+
+  } else {
+    u <- X$u
+    v <- X$v
   }
 
-  sec_loc[dist_to_sec > width/2] <- NA
-
-  u <- v <- matrix(NA, n, dim(X$u)[2])
-  for (i in unique(sec_loc[!is.na(sec_loc)])) {
-    u[i, ] <- colMeans(X$u[sec_loc==i, ],na.rm = T)
-    v[i, ] <- colMeans(X$v[sec_loc==i, ],na.rm = T)
+  if(is.null(dist_vec)) {
+    dist <- oce::geodDist(X$lon, X$lat, alongPath = T)
+  } else {
+    dist <- dist_vec
   }
 
-  X <- list(lon = lonsec, lat = latsec, d = seq(10,600, length.out = 60), x = dist, var = list(u=u,v=v), type = "adcp")
-
+  X <- list(data_lon = X$lon, data_lat = X$lat, sec_lon = sec_lon, sec_lat = sec_lat,
+           dist_vec = dist_vec, width = width, dx = dx, dz = dz,
+           d = seq(10,600, length.out = 60), x = dist, var = list(u=u,v=v), name = "current", type = "adcp")
 
 }
 
