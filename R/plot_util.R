@@ -237,7 +237,61 @@ make_vector_lonlat <- function(lon,lat,u,v) {
 
 
 
+#' Generate swath for plotting sections
+#'
+#' @param lon
+#' @param lat
+#' @param width
+#'
+#' @return
+#' @export
+#'
+#' @examples
+generate_swath <- function(lon,lat,width) {
 
+  gradient <- function(x,y) {
+
+    yo <- dy <- dx <- rep(NA,length(y))
+    ii <- 2:(length(yo)-1)
+
+    dy[1] <- diff(head(y,2))
+    dy[length(yo)] <- diff(tail(y,2))
+    dy[ii] <- (y[ii+1]-y[ii-1])/2
+
+    dx[1] <- diff(head(x,2))
+    dx[length(yo)] <- diff(tail(x,2))
+    dx[ii] <- (x[ii+1]-x[ii-1])/2
+
+    yo <- dy / dx
+
+    out <- list(dx = dx, dy = dy, yo = yo)
+
+  }
+
+  # how much do you go in lon for 1km
+  lon_scale = 1/oce::geodDist(lon,lat,lon+1,lat)
+
+  # how much do you go in lat for 1km
+  lat_scale = 1/oce::geodDist(lon,lat,lon,lat+1)
+
+  # find angle of section at any point
+  z <- gradient(lon,lat)
+  dx <- z$dx * lon_scale * width / 2
+  dy <- z$dy * lat_scale * width / 2
+
+  # one side
+  box <- cbind(lon + dy / lon_scale, lat - dx / lat_scale)
+  box2 <- cbind(lon - dy / lon_scale, lat + dx / lat_scale)
+  box2 <- box2[seq(nrow(box), 1, length.out = nrow(box)), ]
+  box <- rbind(box,box2)
+  box <- rbind(box,box[1, ])
+
+  box <- as.data.frame(box)
+  names(box) <- c("lon","lat")
+
+  return(box)
+
+}
 
 #' Set a colormap
 #'
