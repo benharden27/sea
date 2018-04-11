@@ -32,7 +32,7 @@ plot_flowthru <- function(df, var='temp', data_source = "elg", step = NULL,
                           colormap = oce::oce.colorsTemperature(),
                           ran_val = NULL, ran_qua = c(0.01,0.99), ...) {
 
-  if(is_null(step)) {
+  if(is.null(step)) {
     if(data_source == 'elg') {
       step = 60
     } else {
