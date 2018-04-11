@@ -176,7 +176,7 @@ prep_section_ctd <- function(sec, var = "temperature", select = NULL, dist_vec =
 
   X <- list(data_lon = lonctd, data_lat = latctd, sec_lon = sec_lon, sec_lat = sec_lat,
             dist_vec = dist_vec, width = width, dx = dx, dz = dz,
-            d = d, x = dist, var = v, type = "ctd")
+            d = d, x = dist, var = v, name = var, type = "ctd")
 
 }
 
@@ -189,45 +189,96 @@ prep_section_ctd <- function(sec, var = "temperature", select = NULL, dist_vec =
 #' @export
 #'
 #' @examples
-prep_section_hydro <- function(df, var = "chla", select = NULL,
-                               xo = NULL, yo = NULL, along_path = T, dist_vec = NULL) {
+prep_section_hydro <- function(df, var = "chla", select = NULL, dist_vec = NULL,
+                               along_section = F, sec_lon = NULL, sec_lat = NULL,
+                               dx = 5, dz = 25, width = 10) {
 
-  stations <- unique(df$station)
+  sta_i <- !duplicated(df$station)
+  stations <- df$station[sta_i]
+  lonloc <- df$lon[sta_i]
+  latloc <- df$lat[sta_i]
 
-  if(is.null(select)) {
+  # subset data based on selection
+  if(is.null(select))
     select <- 1:length(stations)
+
+  sti <- stations %in% stations[select]
+
+  stations <- stations[sti]
+  lonloc <- lonloc[sti]
+  latloc <- latloc[sti]
+
+  if (along_section) {
+
+    if (is.null(sec_lon))
+      sec_lon <- lonloc[c(1,length(lonloc))]
+
+    if (is.null(sec_lat))
+      sec_lat <- latloc[c(1,length(latloc))]
+
+    # create section vector using the dx incriment along the section
+    # TODO should functionalize this process
+    tot_dist <- oce::geodDist(sec_lon,sec_lat,alongPath = T)
+    n <- ceiling(diff(range(tot_dist)) / dx *5)
+    sec_lon <- seq(sec_lon[1],sec_lon[2],length.out = n)
+    sec_lat <- seq(sec_lat[1],sec_lat[2],length.out = n)
+    dist <- oce::geodDist(sec_lon,sec_lat,alongPath = T)
+
+    # find nearest section vector point to each CTD and assign that loaction to the CTD
+    distloc <- rep(NA,length(lonloc))
+    for (i in 1:length(lonloc)) {
+      dist_to_section <- min(oce::geodDist(sec_lon,sec_lat,lonloc[i],latloc[i]))
+      if(dist_to_section < width) {
+        distloc[i] <- dist[which.min(oce::geodDist(sec_lon,sec_lat,lonloc[i],latloc[i]))]
+      }
+    }
+
+    di <- !is.na(distloc)
+    df <- dplyr::filter(df, lon %in% lonloc[di] & lat %in% latloc[di])
+    dist_vec <- distloc[di]
+    sta_i <- !duplicated(df$station)
+    stations <- df$station[sta_i]
   }
 
-  sti <- df$station %in% stations[select]
-
-  lonloc <- df$lon[sti]
-  latloc <- df$lat[sti]
 
   if(is.null(dist_vec)) {
-    if (along_path) {
-      dist <- oce::geodDist(lonloc, latloc, alongPath = T)
-    } else {
-      dist <- oce::geodDist(lonloc, latloc, lonloc[1], latloc[1])
-    }
+    dist <- oce::geodDist(lonloc, latloc, alongPath = T)
   } else {
     dist <- dist_vec
   }
 
-  if(is.null(xo))
-    xo <- pretty(dist,n = floor(length(stations)*2), n_min = length(stations))
 
-  if(is.null(yo))
-    yo <- seq(5, 600, 50)
 
-  df <- dplyr::mutate(df[sti, ], dist = dist)
 
-  ran <- !is.na(df[[var]])
+  d <- seq(0,max(df$z,na.rm=T),dz)
 
-  z <- akima::interp(df$dist[ran], df$z[ran], df[[var]][ran],
-                       xo = xo, yo = yo, linear = TRUE)
 
-  X = list(lon = lonloc, lat = latloc, x = z$x, d = z$y, var = z$z , type = "hydro")
+  v <- array(NA, dim = c(length(stations), length(d)))
+  for (i in 1:length(stations)) {
+    prof <- dplyr::filter(df,station == stations[i])
+    if(length(which(!is.na(prof[[var]]))) == 0) {
+      v[i, ] <- rep(NA,length(d))
+    } else {
+      v[i, ] <- approx(prof$z,prof[[var]],d)$y
+    }
+  }
 
+  # if(is.null(xo))
+  #   xo <- pretty(dist,n = floor(length(stations)*2), n_min = length(stations))
+  #
+  # if(is.null(yo))
+  #   yo <- seq(5, 600, 50)
+  #
+  # df <- dplyr::mutate(df[sti, ], dist = dist)
+  #
+  # ran <- !is.na(df[[var]])
+  #
+  # z <- akima::interp(df$dist[ran], df$z[ran], df[[var]][ran],
+  #                      xo = xo, yo = yo, linear = TRUE)
+
+  X = list(data_lon = lonloc, data_lat = latloc, sec_lon = sec_lon, sec_lat = sec_lat,
+           dist_vec = dist_vec, width = width, dx = dx, dz = dz,
+           d = d, x = dist, var = v, name = var, type = "hydro")
 }
 
 
