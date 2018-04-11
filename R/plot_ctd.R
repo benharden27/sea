@@ -12,7 +12,10 @@
 #' @export
 #'
 #' @examples
-plot_section <- function(X, var = "temp", select = NULL, dx = 5, width = 10, xo = NULL, yo = NULL, sec_lon = NULL, sec_lat = NULL, var_breaks = NULL, dist_vec = NULL, along_path = T, ylim = c(0,600)) {
+plot_section <- function(X, var = "temp", select = NULL, dist_vec = NULL,
+                         var_breaks = NULL, ylim = c(0,600),
+                         along_section = F, sec_lon = NULL, sec_lat = NULL,
+                         dx = 5, dz = 25, width = 10) {
 
   if(class(X[[1]]) == "ctd" | class(X) == "section") {
     X <- prep_section_ctd(X, var = var, dist_vec = dist_vec, along_path = along_path)
@@ -102,21 +105,59 @@ plot_section_map <- function(sec, labels = TRUE, factor = 0.15, ...) {
 #' @export
 #'
 #' @examples
-prep_section_ctd <- function(sec, var = "temperature", select = NULL, dist_vec = NULL, along_path = T) {
+prep_section_ctd <- function(sec, var = "temperature", select = NULL, dist_vec = NULL,
+                             along_section = F, sec_lon = NULL, sec_lat = NULL,
+                             dx = 5, dz = 5, width = 10) {
 
+  # if the input is a list of ctds, convert to an OCE section object
   if(is.list(sec))
     sec <- make_section(sec)
 
+  # select ctds that you user wants to plot
   if(is.null(select))
     select <- 1:length(sec@metadata$stationId)
 
-  s <- subset(sec, select %in% stationId)
+  s <- oce::subset(sec, select %in% stationId)
 
-  # s <- oce::sectionGrid(sec)
+  # grid the section data
+  s <- oce::sectionGrid(s)
 
+  # create variables for number of stations and their lat/lons
   nstation <- length(s[['station']])
   latctd <- s@metadata$latitude
   lonctd <- s@metadata$longitude
+
+  # If plotting along a section...
+  if(along_section) {
+
+    # if no section longitude provided then asign to first and last values
+    if(is.null(sec_lon))
+      sec_lon <- s@metadata$longitude[c(1,length(s@metadata$longitude))]
+
+    if(is.null(sec_lat))
+      sec_lat <- s@metadata$latitude[c(1,length(s@metadata$latitude))]
+
+    # create section vector using the dx incriment along the section
+    tot_dist <- oce::geodDist(sec_lon,sec_lat,alongPath = T)
+    n <- ceiling(diff(range(tot_dist)) / dx * 5)
+    sec_lon <- seq(sec_lon[1],sec_lon[2],length.out = n)
+    sec_lat <- seq(sec_lat[1],sec_lat[2],length.out = n)
+    dist <- oce::geodDist(sec_lon,sec_lat,alongPath = T)
+
+    # find nearest section vector point to each CTD and assign that loaction to the CTD
+    distctd <- rep(NA,length(lonctd))
+    for (i in 1:length(latctd)) {
+      dist_to_section <- min(oce::geodDist(sec_lon,sec_lat,lonctd[i],latctd[i]))
+      if(dist_to_section < width) {
+        distctd[i] <- dist[which.min(oce::geodDist(sec_lon,sec_lat,lonctd[i],latctd[i]))]
+      }
+    }
+
+    # subset to just those that were selected along section
+    s <- subset(s,!is.na(distctd))
+    dist_vec <- distctd[!is.na(distctd)]
+
+  }
 
   p <- unique(s[['pressure']])
   d <- oce::swDepth(p, mean(latctd, na.rm = TRUE))
@@ -128,16 +169,14 @@ prep_section_ctd <- function(sec, var = "temperature", select = NULL, dist_vec =
   }
 
   if(is.null(dist_vec)) {
-    if(along_path) {
-      dist <- oce::geodDist(sec, alongPath=T)
-    } else {
-      dist <- oce::geodDist(sec)
-    }
+    dist <- oce::geodDist(sec, alongPath=T)
   } else {
     dist <- dist_vec
   }
 
-  X <- list(lon = lonctd, lat = latctd, d = d, x = dist, var = v, type = "ctd")
+  X <- list(data_lon = lonctd, data_lat = latctd, sec_lon = sec_lon, sec_lat = sec_lat,
+            dist_vec = dist_vec, width = width, dx = dx, dz = dz,
+            d = d, x = dist, var = v, type = "ctd")
 
 }
 
