@@ -20,7 +20,7 @@ read_elg <- function(filein,forceGPS=NULL,preCheck = T,skip=0) {
   # TODO: Optimize code using pmap from purrr Package
 
   if(skip>0) {
-    col_names <- names(read_csv(filein, n_max = 0))
+    col_names <- names(readr::read_csv(filein, n_max = 0))
   } else {
     col_names=T
   }
@@ -29,70 +29,70 @@ read_elg <- function(filein,forceGPS=NULL,preCheck = T,skip=0) {
   if(preCheck) {
 
     # check for bad lines by checking for number of commas
-    liner <- read_lines(filein)
-    numcom <- str_count(liner,"\\,")
+    liner <- readr::read_lines(filein)
+    numcom <- stringr::str_count(liner,"\\,")
     liner <- liner[numcom==numcom[1]]
 
     # clean and process end of line
     liner <- liner %>%
-      str_replace("\\,$","") %>%    # remove the trailing comma on many ELG files
-      str_replace("$","\\\n") %>%   # add new line to end of each line
-      str_c(collapse="")           # collapse vector into single line for read_csv
+      stringr::str_replace("\\,$","") %>%    # remove the trailing comma on many ELG files
+      stringr::str_replace("$","\\\n") %>%   # add new line to end of each line
+      stringr::str_c(collapse="")           # collapse vector into single line for read_csv
 
     # Read in lines using readr package (quicker than base read.csv)
-    df <- read_csv(liner,col_types = cols(.default=col_character()),skip=skip,col_names = col_names)
+    df <- readr::read_csv(liner,col_types = cols(.default=col_character()),skip=skip,col_names = col_names)
 
   } else {
 
     # If no precheck then just read in the file as is
-    df <- read_csv(filein,col_types = cols(.default=col_character()),skip=skip,col_names = col_names)
+    df <- readr::read_csv(filein,col_types = readr::cols(.default=readr::col_character()),skip=skip,col_names = col_names)
 
   }
 
   # Reasign names that have dashes in them to be referenced more easily
-  names(df) <- str_replace_all(names(df),"-",".")
+  names(df) <- stringr::str_replace_all(names(df),"-",".")
 
   # Construct the
   args <- tibble::tribble(~name,~regex,~parse_fun,
-                          "sys_date","date",mdy,
-                          "sys_time","^time",parse_time,
-                          "nav_time","gps.*nav.*time",parse_character,
-                          "nav_lon","gps.*nav.*lon",parse_lon,
-                          "nav_lat","gps.*nav.*lat",parse_lat,
-                          "nav_sog","gps.*nav.*sog",parse_double,
-                          "nav_cog","gps.*nav.*cog",parse_double,
-                          "nav_quality","gps.*nav.*quality",parse_integer,
-                          "lab_time","gps.*lab.*time",parse_character,
-                          "lab_lon","gps.*lab.*lon",parse_lon,
-                          "lab_lat","gps.*lab.*lat",parse_lat,
-                          "lab_sog","gps.*lab.*sog",parse_double,
-                          "lab_cog","gps.*lab.*cog",parse_double,
-                          "lab_quality","gps.*lab.*quality",parse_integer,
-                          "temp","tsal.*temp",parse_double,
-                          "sal","tsal.*sal",parse_double,
-                          "fluor","^fluo.*invivo",parse_double,
-                          "fluor_1min","fluo.*chl.*1.*min",parse_double,
-                          "fluor_60min","^fluo.*chl.*60.*min",parse_double,
-                          "CDOM","cdom.*raw",parse_double,
-                          "CDOM_1min","cdom.*1.*min",parse_double,
-                          "CDOM_60min","cdom.*60.*min",parse_double,
-                          "xmiss",c("trans.*raw","xmiss.*raw","xmiss.*[^m]"),parse_double,
-                          "xmiss_1min",c("trans.*1\\.*min","xmiss.*1\\.*min"),parse_double,
-                          "xmiss_60min",c("trans.*60.*min","xmiss.*60.*min"),parse_double,
-                          "wind_sp","true.*wind.*sp",parse_double,
-                          "wind_dir","true.*wind.*dir",parse_double,
-                          "wind_sp_rel","^wind.*sp",parse_double,
-                          "wind_dir_rel","^wind.*dir",parse_double,
-                          "heading",c("hdg","heading"),parse_double,
-                          "pitch","pitch",parse_double,
-                          "roll","roll",parse_double,
-                          "depth",c("depth","dbt"),parse_double,
-                          "wire_payout","lci90.*payout",parse_double,
-                          "wire_tension","lci90.*tension",parse_double,
-                          "wire_speed","lci90.*spd",parse_double
+                          "sys_date","date",lubridate::mdy,
+                          "sys_time","^time",readr::parse_time,
+                          "nav_time","gps.*nav.*time",readr::parse_character,
+                          "nav_lon","gps.*nav.*lon",readr::parse_lon,
+                          "nav_lat","gps.*nav.*lat",readr::parse_lat,
+                          "nav_sog","gps.*nav.*sog",readr::parse_double,
+                          "nav_cog","gps.*nav.*cog",readr::parse_double,
+                          "nav_quality","gps.*nav.*quality",readr::parse_integer,
+                          "lab_time","gps.*lab.*time",readr::parse_character,
+                          "lab_lon","gps.*lab.*lon",readr::parse_lon,
+                          "lab_lat","gps.*lab.*lat",readr::parse_lat,
+                          "lab_sog","gps.*lab.*sog",readr::parse_double,
+                          "lab_cog","gps.*lab.*cog",readr::parse_double,
+                          "lab_quality","gps.*lab.*quality",readr::parse_integer,
+                          "temp","tsal.*temp",readr::parse_double,
+                          "sal","tsal.*sal",readr::parse_double,
+                          "fluor","^fluo.*invivo",readr::parse_double,
+                          "fluor_1min","fluo.*chl.*1.*min",readr::parse_double,
+                          "fluor_60min","^fluo.*chl.*60.*min",readr::parse_double,
+                          "CDOM","cdom.*raw",readr::parse_double,
+                          "CDOM_1min","cdom.*1.*min",readr::parse_double,
+                          "CDOM_60min","cdom.*60.*min",readr::parse_double,
+                          "xmiss",c("trans.*raw","xmiss.*raw","xmiss.*[^m]"),readr::parse_double,
+                          "xmiss_1min",c("trans.*1\\.*min","xmiss.*1\\.*min"),readr::parse_double,
+                          "xmiss_60min",c("trans.*60.*min","xmiss.*60.*min"),readr::parse_double,
+                          "wind_sp","true.*wind.*sp",readr::parse_double,
+                          "wind_dir","true.*wind.*dir",readr::parse_double,
+                          "wind_sp_rel","^wind.*sp",readr::parse_double,
+                          "wind_dir_rel","^wind.*dir",readr::parse_double,
+                          "heading",c("hdg","heading"),readr::parse_double,
+                          "pitch","pitch",readr::parse_double,
+                          "roll","roll",readr::parse_double,
+                          "depth",c("depth","dbt"),readr::parse_double,
+                          "wire_payout","lci90.*payout",readr::parse_double,
+                          "wire_tension","lci90.*tension",readr::parse_double,
+                          "wire_speed","lci90.*spd",readr::parse_double
                           )
 
-  args_in <- as_tibble(list(df=list(df),regex=args$regex,parse_fun=args$parse_fun))
+  args_in <- tibble::as_tibble(list(df=list(df),regex=args$regex,parse_fun=args$parse_fun))
   namelist <- purrr::as_vector(dplyr::select(args,name))
 
   # Work out how to pass format arguments or just post-process afterward
@@ -104,9 +104,11 @@ read_elg <- function(filein,forceGPS=NULL,preCheck = T,skip=0) {
   df <- tibble::as.tibble(output)
 
   # additional parsing for some elements
-  df$nav_time <- parse_time(str_extract(df$nav_time,"[0-9]{6}"),format="%H%M%S")
-  df$lab_time <- parse_time(str_extract(df$lab_time,"[0-9]{6}"),format="%H%M%S")
-  df$sys_dttm <- update(df$sys_date,hour=hour(df$sys_time),minute=minute(df$sys_time),second=second(df$sys_time))
+  df$nav_time <- readr::parse_time(stringr::str_extract(df$nav_time,"[0-9]{6}"),format="%H%M%S")
+  df$lab_time <- readr::parse_time(stringr::str_extract(df$lab_time,"[0-9]{6}"),format="%H%M%S")
+  df$sys_dttm <- update(df$sys_date, hour = lubridate::hour(df$sys_time),
+                        minute=lubridate::minute(df$sys_time),
+                        second=lubridate::second(df$sys_time))
 
   # Make datetimes from GPS using the system datetime
   # TODO: functionize the following
@@ -120,9 +122,9 @@ read_elg <- function(filein,forceGPS=NULL,preCheck = T,skip=0) {
     }
     rmdifft <- runmed(difft,k)
     difft[dayoffi & goodi] <- rmdifft[dayoffi & goodi]
-    df <- mutate(df,lab_dttm = sys_dttm+difft)
+    df <- dplyr::mutate(df,lab_dttm = sys_dttm+difft)
   } else {
-    df <- mutate(df,lab_dttm = parse_datetime(rep(NA,nrow(df))))
+    df <- dplyr::mutate(df,lab_dttm = readr::parse_datetime(rep(NA,nrow(df))))
   }
 
   # largely repeated from above, but for NAV GPS
@@ -136,9 +138,9 @@ read_elg <- function(filein,forceGPS=NULL,preCheck = T,skip=0) {
     }
     rmdifft <- runmed(difft,k)
     difft[dayoffi & goodi] <- rmdifft[dayoffi & goodi]
-    df <- mutate(df,nav_dttm = sys_dttm+difft)
+    df <- dplyr::mutate(df,nav_dttm = sys_dttm+difft)
   } else {
-    df <- mutate(df,nav_dttm = parse_datetime(rep(NA,nrow(df))))
+    df <- dplyr::mutate(df,nav_dttm = readr::parse_datetime(rep(NA,nrow(df))))
   }
 
   # choose master datetime
@@ -161,7 +163,7 @@ read_elg <- function(filein,forceGPS=NULL,preCheck = T,skip=0) {
   }
 
   # add the chosen, lon, lat and dttm
-  df <- mutate(df,lon=lon,lat=lat,dttm=dttm)
+  df <- dplyr::mutate(df,lon=lon,lat=lat,dttm=dttm)
 
   # rearrange the columns into correct order
   df <- df[,c(42,40,41,37,1,2,39,3:8,38,9:36)]

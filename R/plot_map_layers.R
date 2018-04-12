@@ -130,7 +130,7 @@ make_track <- function(df,data_source = "elg") {
   df <- format_lon(df)
 
   # return a geom_path object from the lon and lat data
-  out <- geom_path(aes(lon,lat),data=df)
+  out <- ggplot2::geom_path(ggplot2::aes(lon,lat),data=df)
 
 }
 
