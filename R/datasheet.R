@@ -140,9 +140,9 @@ read_neuston <- function(filein) {
   # parse the datetime field
   output$date <- lubridate::as_date(output$date,origin="1900-1-1")
   local_in <- lubridate::as_datetime(output$time_in*60*60*24)
-  date(local_in) <- output$date
+  lubridate::date(local_in) <- output$date
   local_out <- lubridate::as_datetime(output$time_out*60*60*24)
-  date(local_out) <- output$date
+  lubridate::date(local_out) <- output$date
   difft <- local_out - local_in
   difft[difft>200] <- difft[difft>60]-lubridate::dhours(24)
   local_out <- local_in + difft
@@ -214,7 +214,7 @@ read_surfsamp <- function(filein) {
     # parse the datetime field
     output$date <- lubridate::as_date(output$date,origin="1900-1-1")
     local <- lubridate::as_datetime(output$time*60*60*24)
-    date(local) <- output$date
+    lubridate::date(local) <- output$date
 
     df <- tibble::add_column(output,dttm_local = local,.after=1)
 
@@ -316,7 +316,7 @@ read_hourly <- function(filein) {
 
   output$date <- lubridate::as_date(output$date,origin="1900-1-1")
   local <- lubridate::as_datetime(output$time*60*60*24)
-  date(local) <- output$date
+  lubridate::date(local) <- output$date
   df <- tibble::add_column(output,dttm = local,.after=0)
 
 }

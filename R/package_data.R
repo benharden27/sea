@@ -23,7 +23,7 @@ package_data <- function(root_folder,cruiseID=NULL,...) {
       if(i==1) {
         elg <- read_elg(filein, ...)
       } else {
-        elg <- bind_rows(elg,read_elg(filein, ...))
+        elg <- dplyr::bind_rows(elg,read_elg(filein, ...))
       }
     }
   } else {
@@ -82,7 +82,7 @@ package_data <- function(root_folder,cruiseID=NULL,...) {
 #'
 #' @examples
 find_datasheet <- function(files,pattern) {
-  data_file <- str_subset(files,pattern)
+  data_file <- stringr::str_subset(files,pattern)
   if(length(data_file)>1){
     data_file <- data_file[which.min(nchar(data_file))]
   }

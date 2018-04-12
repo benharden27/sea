@@ -161,7 +161,7 @@ make_points <- function(df, var = "temp", data_source = "elg", step = 1, size = 
   # Assign variable if it exists
   if(is_var(df,var)) {
     val <- df[[var]]
-    df <- mutate(df,val=val)
+    df <- dplyr::mutate(df,val=val)
   } else {
     stop("Variable not found in data")
   }
@@ -181,7 +181,7 @@ make_points <- function(df, var = "temp", data_source = "elg", step = 1, size = 
   ran <- seq(1,nrow(df),step)
 
   # return a geom_points structure from data
-  out <- geom_point(aes(x = lon, y = lat, color = val), data=df[ran, ], size = size)
+  out <- ggplot2::geom_point(ggplot2::aes(x = lon, y = lat, color = val), data=df[ran, ], size = size)
 
 
 }

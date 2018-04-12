@@ -43,7 +43,7 @@ plot_flowthru <- function(df, var='temp', data_source = "elg", step = NULL,
   make_base_map(df,...) +
     make_points(df,data_source = data_source, var = var,
               step = step, ran_val = ran_val, ran_qua = ran_qua) +
-    scale_color_gradientn(colors = colormap(100))
+    ggplot2::scale_color_gradientn(colors = colormap(100))
 
 }
 
@@ -98,8 +98,8 @@ plot_bubble <- function(df,var, ran_val = NULL, ran_qua = c(0,1), base_map = NUL
   }
 
   base_map +
-    geom_point(aes(x=lon,y=lat,size=val),data=df,pch=21,fill='white') +
-    labs(color=var)
+    ggplot2::geom_point(ggplot2::aes(x=lon,y=lat,size=val),data=df,pch=21,fill='white') +
+    ggplot2::labs(color=var)
 
 }
 

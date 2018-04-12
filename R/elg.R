@@ -34,13 +34,12 @@ read_elg <- function(filein,forceGPS=NULL,preCheck = T,skip=0) {
     liner <- liner[numcom==numcom[1]]
 
     # clean and process end of line
-    liner <- liner %>%
-      stringr::str_replace("\\,$","") %>%    # remove the trailing comma on many ELG files
-      stringr::str_replace("$","\\\n") %>%   # add new line to end of each line
-      stringr::str_c(collapse="")           # collapse vector into single line for read_csv
+    liner <- stringr::str_replace(liner,"\\,$","") # remove the trailing comma on many ELG files
+    liner <- stringr::str_replace(liner,"$","\\\n")   # add new line to end of each line
+    liner <- stringr::str_c(liner,collapse="")           # collapse vector into single line for read_csv
 
     # Read in lines using readr package (quicker than base read.csv)
-    df <- readr::read_csv(liner,col_types = cols(.default=col_character()),skip=skip,col_names = col_names)
+    df <- readr::read_csv(liner,col_types = readr::cols(.default=readr::col_character()),skip=skip,col_names = col_names)
 
   } else {
 
@@ -57,14 +56,14 @@ read_elg <- function(filein,forceGPS=NULL,preCheck = T,skip=0) {
                           "sys_date","date",lubridate::mdy,
                           "sys_time","^time",readr::parse_time,
                           "nav_time","gps.*nav.*time",readr::parse_character,
-                          "nav_lon","gps.*nav.*lon",readr::parse_lon,
-                          "nav_lat","gps.*nav.*lat",readr::parse_lat,
+                          "nav_lon","gps.*nav.*lon",parse_lon,
+                          "nav_lat","gps.*nav.*lat",parse_lat,
                           "nav_sog","gps.*nav.*sog",readr::parse_double,
                           "nav_cog","gps.*nav.*cog",readr::parse_double,
                           "nav_quality","gps.*nav.*quality",readr::parse_integer,
                           "lab_time","gps.*lab.*time",readr::parse_character,
-                          "lab_lon","gps.*lab.*lon",readr::parse_lon,
-                          "lab_lat","gps.*lab.*lat",readr::parse_lat,
+                          "lab_lon","gps.*lab.*lon",parse_lon,
+                          "lab_lat","gps.*lab.*lat",parse_lat,
                           "lab_sog","gps.*lab.*sog",readr::parse_double,
                           "lab_cog","gps.*lab.*cog",readr::parse_double,
                           "lab_quality","gps.*lab.*quality",readr::parse_integer,
