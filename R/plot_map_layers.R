@@ -9,7 +9,9 @@
 #' @export
 #'
 #' @examples
-make_base_map <- function(df=NULL,lonlim=NULL,latlim=NULL,data_source = 'hourly',plot_bathy=F,high_res = F) {
+make_base_map <- function(df = NULL, lonlim = NULL, latlim = NULL,
+                          data_source = 'hourly', plot_bathy = F, high_res = F,
+                          title = "", factor = 0.15) {
 
   # choose which resolution of coastline
   if(high_res == T) {
@@ -48,11 +50,11 @@ make_base_map <- function(df=NULL,lonlim=NULL,latlim=NULL,data_source = 'hourly'
 
     # Set longitude limits if not prescribed
     if(is.null(lonlim))
-      lonlim <- set_ll_lim(df$lon)
+      lonlim <- set_ll_lim(df$lon, factor = factor)
 
     # Set latitude limits if not prescribed
     if(is.null(latlim))
-      latlim <- set_ll_lim(df$lat)
+      latlim <- set_ll_lim(df$lat, factor = factor)
   }
 
   # subset coastline data (TODO: need to ensure that 5 degs is a good selection for buffer)
@@ -70,9 +72,9 @@ make_base_map <- function(df=NULL,lonlim=NULL,latlim=NULL,data_source = 'hourly'
   base_map <- base_map +
     ggplot2::geom_polygon(ggplot2::aes(x=long, y = lat, group = group),data=coastline) +
     ggplot2::coord_quickmap(xlim=lonlim, ylim=latlim, expand = F) +
-    ggplot2::xlab("Longitude") +
-    ggplot2::ylab("Latitude") +
-    ggplot2::theme_bw()
+    ggplot2::labs(x = "", y = "", title = title) +
+    ggplot2::theme_bw() +
+    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
 
 #
   if(is.null(df)) {
@@ -209,17 +211,73 @@ make_vectors <- function(df, data_source = "elg", field = "wind", step = 60, sca
 
   if(field=="wind") {
     uv <- wswd_to_uv(df$wind_sp,df$wind_dir)
-    df <- mutate(df,u = uv$u*scale, v = uv$v*scale)
+    df <- dplyr::mutate(df,u = uv$u*scale, v = uv$v*scale)
   }
 
   vec <- make_vector_lonlat(df$lon,df$lat,df$u,df$v)
-  df <- mutate(df,lone = vec$lone, late = vec$late)
+  df <- dplyr::mutate(df,lone = vec$lone, late = vec$late)
 
   # set up th range of values to be potted
   ran <- seq(1,nrow(df),step)
 
   # TODO add arrows to end of line rather than dots
-  out <- geom_segment(aes(x = lon, y = lat, xend = lone, yend = late), data = df[ran, ])
+  out <- ggplot2::geom_segment(ggplot2::aes(x = lon, y = lat, xend = lone, yend = late), data = df[ran, ])
 
 }
 
+
+#' Creates subplots from list of ggplot objects
+#'
+#' @param obj
+#' @param nrow
+#' @param ncol
+#'
+#' @return
+#' @export
+#'
+#' @examples
+make_subplots <- function(obj,nrow = 1, ncol = 1) {
+
+  while (nrow*ncol-2 > length(obj)) {
+    nrow <- nrow -1
+  }
+
+  ntot = nrow * ncol
+
+  if (ntot < length(obj))
+    obj <- subset(obj, 1:length(obj) %in% 1:ntot)
+
+  for (i in 1:length(obj))
+    obj[[i]] <- ggplot2::ggplotGrob(obj[[i]])
+
+
+  gridExtra::grid.arrange(grobs=obj,nrow=nrow,ncol=ncol)
+
+  # ii <- 0
+  # row <- NULL
+  # for (i in 1:nrow) {
+  #   ii <- ii + 1
+  #   g <- obj[[ii]]
+  #   if(ncol > 1) {
+  #     for (j in 2:ncol) {
+  #       ii <- ii + 1
+  #       if (ii > length(obj)) {
+  #         g <- cbind(g, obj[[length(obj)]], size = "first")
+  #       } else {
+  #         g <- cbind(g, obj[[ii]], size = "first")
+  #       }
+  #     }
+  #   }
+  #   if (i == 1) {
+  #     h <- g
+  #   } else {
+  #     h <- rbind(h, g, size = "first")
+  #   }
+  # }
+  #
+  # h$heights <- grid::unit.pmax(h$heights)
+  # h$widths <- grid::unit.pmax(h$widths)
+  # grid::grid.newpage()
+  # grid::grid.draw(h)
+
+}

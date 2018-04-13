@@ -11,7 +11,7 @@
 #' plot_track()
 plot_track <- function(df,data_source = "elg", ...) {
 
-  make_base_map(df,...) +
+  make_base_map(df, ...) +
     make_track(df,data_source = data_source)
 
 }
@@ -30,7 +30,8 @@ plot_track <- function(df,data_source = "elg", ...) {
 #' @examples
 plot_flowthru <- function(df, var='temp', data_source = "elg", step = NULL,
                           colormap = oce::oce.colorsTemperature(),
-                          ran_val = NULL, ran_qua = c(0.01,0.99), ...) {
+                          ran_val = NULL, ran_qua = c(0.01,0.99),
+                          title = stringr::str_to_title(var), ...) {
 
   if(is.null(step)) {
     if(data_source == 'elg') {
@@ -40,10 +41,10 @@ plot_flowthru <- function(df, var='temp', data_source = "elg", step = NULL,
     }
   }
 
-  make_base_map(df,...) +
+  make_base_map(df,title = title, ...) +
     make_points(df,data_source = data_source, var = var,
               step = step, ran_val = ran_val, ran_qua = ran_qua) +
-    ggplot2::scale_color_gradientn(colors = colormap(100))
+    ggplot2::scale_color_gradientn(name = "", colors = colormap(100))
 
 }
 
@@ -61,11 +62,27 @@ plot_flowthru <- function(df, var='temp', data_source = "elg", step = NULL,
 #' @export
 #'
 #' @examples
-plot_surf <- function(df, var = 'no3', ran_val = NULL, ran_qua = c(0,1), base_map = NULL, ...) {
-  plot_flowthru(df,var = var,data_source = "surfsamp",colormap = oce::oce.colorsChlorophyll())
+plot_surf <- function(df, var = 'no3', ran_val = NULL, ran_qua = c(0,1), base_map = NULL, title = var, ...) {
+  plot_flowthru(df,var = var,data_source = "surfsamp",colormap = oce::oce.colorsChlorophyll(), title = title)
 }
 
 
+#' Plot surface from an ELG or Hourly file
+#'
+#' @param df
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot_wind <- function(df,data_source = "elg", field = "wind", step = 60, scale = 1,...) {
+
+  make_base_map(df,...) +
+    make_track(df) +
+    make_vectors(df, data_source = data_source, field = field, step = step, scale = scale)
+
+
+}
 
 #' Make a bubble plot
 #'

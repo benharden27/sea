@@ -5,7 +5,7 @@
 \title{Plot surface station data}
 \usage{
 plot_surf(df, var = "no3", ran_val = NULL, ran_qua = c(0, 1),
-  base_map = NULL, ...)
+  base_map = NULL, title = var, ...)
 }
 \arguments{
 \item{...}{}
