@@ -208,7 +208,7 @@ wswd_to_uv <- function(ws,wd) {
   v = -ws*cos(wd*pi/180)
   u = -ws*sin(wd*pi/180)
 
-  out <- tibble(u = u, v = v)
+  out <- tibble::tibble(u = u, v = v)
 
 }
 
@@ -231,7 +231,7 @@ make_vector_lonlat <- function(lon,lat,u,v) {
   late <- lat + v*scale
   lone <- lon + u*scale/cos(lat*pi/180)
 
-  out <- tibble(lon=lon,lat=lat,lone=lone,late=late)
+  out <- tibble::tibble(lon=lon,lat=lat,lone=lone,late=late)
 
 }
 
