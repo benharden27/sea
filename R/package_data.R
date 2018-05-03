@@ -65,7 +65,16 @@ package_data <- function(root_folder,cruiseID=NULL,...) {
     hydro <- NULL
   }
 
-  output <- list(elg=elg,hourly=hourly,surfsamp=surfsamp,neuston=neuston,hydro=hydro)
+  # then adcp
+  adcp_fold <- file.path(root_folder,"OceanDataView","ADCP Text Files")
+  if(length(list.files(adcp_fold)) == 0) {
+    adcp <- NULL
+  } else {
+    adcp <- read_adcp_fold(adcp_fold)
+  }
+
+
+  output <- list(elg = elg, hourly = hourly, surfsamp = surfsamp , neuston = neuston, hydro = hydro, adcp = adcp)
 
 }
 
