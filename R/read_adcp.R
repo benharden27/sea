@@ -16,11 +16,11 @@ read_adcp <- function(adcp_file) {
   # finds the header line index and return headerline
   hi <- stringr::str_which(r, "^Ens.*Eas")
 
-  headers <- readr::read_tsv(adcp_file, skip = hi-1, n_max = 0) %>%
-    names() %>%
-    stringr::str_extract_all("\\w") %>%
-    purrr::map(stringr::str_flatten) %>%
-    unlist()
+  headers <- readr::read_tsv(adcp_file, skip = hi-1, n_max = 0)
+  headers <- names(headers)
+  headers <- stringr::str_extract_all(headers,"\\w")
+  headers <- purrr::map(headers,stringr::str_flatten)
+  headers <- unlist(headers)
 
   # read the table in from 3 lines past the header onwards
   a <- readr::read_tsv(adcp_file, skip = hi+3, col_names = FALSE, col_types = readr::cols(.default = readr::col_double()))
