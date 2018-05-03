@@ -55,6 +55,13 @@ make_base_map <- function(df = NULL, lonlim = NULL, latlim = NULL,
     # Set latitude limits if not prescribed
     if(is.null(latlim))
       latlim <- set_ll_lim(df$lat, factor = factor)
+
+  } else {
+
+    if(!check_antimerid(lonlim)) {
+      coastline$long <- coastline$long - 360;
+    }
+
   }
 
   # subset coastline data (TODO: need to ensure that 5 degs is a good selection for buffer)
