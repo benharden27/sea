@@ -12,7 +12,7 @@
 #' @export
 #'
 #' @examples
-plot_section <- function(X, adcp_var = "u", breaks = NULL, zlim = NULL, ylim = c(0,600)) {
+plot_section <- function(X, adcp_var = "u", breaks = NULL, zlim = NULL, ylim = c(0,600), colormap = oce::oce.colorsTemperature()) {
 
   di <- find_near(X$d,ylim[1]):find_near(X$d,ylim[2])
 
@@ -46,7 +46,7 @@ plot_section <- function(X, adcp_var = "u", breaks = NULL, zlim = NULL, ylim = c
   if(X$type == "adcp") {
     var_cm <- oce::colormap(X$var, breaks = breaks, col = oce::oce.colorsVelocity)
   } else {
-    var_cm <- oce::colormap(X$var, breaks = breaks, col = oce::oceColorsTemperature)
+    var_cm <- oce::colormap(X$var, breaks = breaks, col = colormap)
   }
 
 
