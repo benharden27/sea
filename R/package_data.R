@@ -73,8 +73,15 @@ package_data <- function(root_folder,cruiseID=NULL,...) {
     adcp <- read_adcp_fold(adcp_fold)
   }
 
+  # then ctd
+  ctd_fold <- file.path(root_folder,"CTD","Cnv")
+  if(length(list.files(adcp_fold)) == 0) {
+    ctd <- NULL
+  } else {
+    ctd <- read_ctd_fold(ctd_fold)
+  }
 
-  output <- list(elg = elg, hourly = hourly, surfsamp = surfsamp , neuston = neuston, hydro = hydro, adcp = adcp)
+  output <- list(elg = elg, hourly = hourly, surfsamp = surfsamp , neuston = neuston, hydro = hydro, adcp = adcp, ctd = ctd)
 
 }
 
