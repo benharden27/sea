@@ -79,24 +79,30 @@ plot_section <- function(X, adcp_var = "u", breaks = NULL, zlim = NULL, ylim = c
 #' @export
 #'
 #' @examples
-plot_section_map <- function(X, factor = 0.15) {
+plot_section_map <- function(X, lonlim = NULL, latlim = NULL, factor = 0.15, ...) {
 
   if (!is.null(X$sec_lon)) {
     box <- generate_swath(X$sec_lon,X$sec_lat,X$width)
   } else {
-    box = data.frame(lon = NULL, lat = NULL)
+    box = tibble::as.tibble(lon = NULL, lat = NULL)
   }
 
-  lonlim <- set_ll_lim(c(X$data_lon,box$lon), factor)
-  latlim <- set_ll_lim(c(X$data_lat,box$lat), factor)
+  if(is.null(lonlim))
+    lonlim <- set_ll_lim(c(X$data_lon,box$lon), factor)
 
-  m <- make_base_map(lonlim = lonlim, latlim = latlim) +
-    ggplot2::geom_point(ggplot2::aes(X$data_lon, X$data_lat))
+  if(is.null(latlim))
+    latlim <- set_ll_lim(c(X$data_lat,box$lat), factor)
+
+  data_pos = tibble::tibble(lon = X$data_lon, lat = X$data_lat)
+
+  m <- make_base_map(lonlim = lonlim, latlim = latlim, ...) +
+    ggplot2::geom_point(ggplot2::aes(lon, lat), data = data_pos)
 
   if (!is.null(X$sec_lon)) {
+    sec_pos = tibble::tibble(lon = Xsec_lon, lat = Xsec_lat)
     m <- m +
-      ggplot2::geom_polygon(ggplot2::aes(lon,lat), data = box, fill = 'grey30', alpha = .5) +
-      ggplot2::geom_line(ggplot2::aes(X$sec_lon,X$sec_lat), color = "red")
+      ggplot2::geom_polygon(ggplot2::aes(lon, lat), data = box, fill = 'grey30', alpha = .5) +
+      ggplot2::geom_line(ggplot2::aes(lon, lat), data = data_sec, color = "red")
   }
 
   m
@@ -119,18 +125,21 @@ prep_section_ctd <- function(sec, var = "temperature", select = NULL, dist_vec =
                              along_section = F, sec_lon = NULL, sec_lat = NULL,
                              dx = 5, dz = 5, width = 10) {
 
-  # if the input is a list of ctds, convert to an OCE section object
-  if(is.list(sec))
-    sec <- make_section(sec)
 
-  # select ctds that you user wants to plot
-  if(is.null(select))
-    select <- 1:length(sec@metadata$stationId)
-
-  s <- oce::subset(sec, select %in% stationId)
+  if(is.list(sec)) {
+    if(is.null(select)) {
+      select = 1:length(sec)
+    }
+    sec <- make_section(sec,select = select)
+  } else {
+    if(is.null(select)) {
+      select = 1:length(sec@metadata$stationId)
+    }
+      sec <- oce::subset(sec, stationId == select)
+  }
 
   # grid the section data
-  s <- oce::sectionGrid(s)
+  s <- oce::sectionGrid(sec)
 
   # create variables for number of stations and their lat/lons
   nstation <- length(s[['station']])
