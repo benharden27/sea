@@ -99,10 +99,10 @@ plot_section_map <- function(X, lonlim = NULL, latlim = NULL, factor = 0.15, ...
     ggplot2::geom_point(ggplot2::aes(lon, lat), data = data_pos)
 
   if (!is.null(X$sec_lon)) {
-    sec_pos = tibble::tibble(lon = Xsec_lon, lat = Xsec_lat)
+    sec_pos = tibble::tibble(lon = X$sec_lon, lat = X$sec_lat)
     m <- m +
       ggplot2::geom_polygon(ggplot2::aes(lon, lat), data = box, fill = 'grey30', alpha = .5) +
-      ggplot2::geom_line(ggplot2::aes(lon, lat), data = data_sec, color = "red")
+      ggplot2::geom_line(ggplot2::aes(lon, lat), data = sec_pos, color = "red")
   }
 
   m
