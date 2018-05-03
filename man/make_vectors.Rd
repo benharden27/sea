@@ -4,8 +4,7 @@
 \alias{make_vectors}
 \title{A geom of vector lines}
 \usage{
-make_vectors(df, data_source = "elg", field = "wind", step = 60,
-  scale = 1)
+make_vectors(df, data_source = "elg", step = 60, scale = 1)
 }
 \arguments{
 \item{step}{}

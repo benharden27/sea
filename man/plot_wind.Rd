@@ -2,14 +2,13 @@
 % Please edit documentation in R/plot_map_vars.R
 \name{plot_wind}
 \alias{plot_wind}
-\title{Plot surface from an ELG or Hourly file}
+\title{Plot surface wind from an ELG or Hourly file}
 \usage{
-plot_wind(df, data_source = "elg", field = "wind", step = 60, scale = 1,
-  ...)
+plot_wind(df, data_source = "elg", step = 60, scale = 1, ...)
 }
 \arguments{
 \item{df}{}
 }
 \description{
-Plot surface from an ELG or Hourly file
+Plot surface wind from an ELG or Hourly file
 }

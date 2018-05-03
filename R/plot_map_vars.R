@@ -67,6 +67,24 @@ plot_surf <- function(df, var = 'no3', ran_val = NULL, ran_qua = c(0,1), base_ma
 }
 
 
+#' Plot surface wind from an ELG or Hourly file
+#'
+#' @param df
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot_wind <- function(df,data_source = "elg", step = 60, scale = 1,...) {
+
+  make_base_map(df,...) +
+    make_track(df) +
+    make_vectors(df, data_source = data_source, step = step, scale = scale)
+
+
+}
+
+
 #' Plot surface from an ELG or Hourly file
 #'
 #' @param df
@@ -75,11 +93,11 @@ plot_surf <- function(df, var = 'no3', ran_val = NULL, ran_qua = c(0,1), base_ma
 #' @export
 #'
 #' @examples
-plot_wind <- function(df,data_source = "elg", field = "wind", step = 60, scale = 1,...) {
+plot_current <- function(df, step = 1, scale = 0.005,...) {
 
   make_base_map(df,...) +
-    make_track(df) +
-    make_vectors(df, data_source = data_source, field = field, step = step, scale = scale)
+    make_track(df, data_source = "adcp") +
+    make_vectors(df, data_source = "adcp", step = step, scale = scale)
 
 
 }

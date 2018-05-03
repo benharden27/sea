@@ -77,13 +77,9 @@ make_base_map <- function(df = NULL, lonlim = NULL, latlim = NULL,
     ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
 
 #
-  if(is.null(df)) {
-    xlabs <- pretty(lonlim)
-    ylabs <- pretty(latlim)
-  } else {
-    xlabs <- pretty(df$lon)
-    ylabs <- pretty(df$lat)
-  }
+  xlabs <- pretty(lonlim)
+  ylabs <- pretty(latlim)
+
 #   xlabs <- ggplot2::ggplot_build(base_map)$layout$panel_ranges[[1]]$x.major_source
 #   ylabs <- ggplot2::ggplot_build(base_map)$layout$panel_ranges[[1]]$y.major_source
 # #
@@ -105,8 +101,8 @@ make_base_map <- function(df = NULL, lonlim = NULL, latlim = NULL,
 
 #
   base_map <- base_map +
-    ggplot2::scale_x_continuous(breaks = xlabs_old, labels = xlabs) +
-    ggplot2::scale_y_continuous(breaks = ylabs_old, labels = ylabs)
+    ggplot2::scale_x_continuous(breaks = xlabs_old, labels = xlabs, limits = lonlim) +
+    ggplot2::scale_y_continuous(breaks = ylabs_old, labels = ylabs, limits = latlim)
 
 
   return(base_map)
@@ -130,6 +126,9 @@ make_track <- function(df,data_source = "elg") {
 
   # add a function to fix the antimeridion cross
   df <- format_lon(df)
+
+  if(data_source == "adcp")
+    df <- as.data.frame(df)
 
   # return a geom_path object from the lon and lat data
   out <- ggplot2::geom_path(ggplot2::aes(lon,lat),data=df)
@@ -200,7 +199,7 @@ make_points <- function(df, var = "temp", data_source = "elg", step = 1, size = 
 #' @export
 #'
 #' @examples
-make_vectors <- function(df, data_source = "elg", field = "wind", step = 60, scale = 1) {
+make_vectors <- function(df, data_source = "elg", step = 60, scale = 1) {
 
   # select the data source from sea structure
   if(is_sea_struct(df))
@@ -209,9 +208,13 @@ make_vectors <- function(df, data_source = "elg", field = "wind", step = 60, sca
   # add a function to fix the antimeridion cross
   df <- format_lon(df)
 
-  if(field=="wind") {
-    uv <- wswd_to_uv(df$wind_sp,df$wind_dir)
-    df <- dplyr::mutate(df,u = uv$u*scale, v = uv$v*scale)
+  if(data_source == "adcp") {
+    u <- df$u[ ,1]
+    v <- df$v[ ,1]
+    df <- tibble::tibble(lon = df$lon, lat = df$lat, u = u * scale, v = v * scale)
+  } else {
+    uv <- wswd_to_uv(df$wind_sp, df$wind_dir)
+    df <- dplyr::mutate(df,u = uv$u * scale, v = uv$v * scale)
   }
 
   vec <- make_vector_lonlat(df$lon,df$lat,df$u,df$v)
