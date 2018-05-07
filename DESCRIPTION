@@ -12,4 +12,7 @@ Imports: oce,
     readxl,
     tidyverse,
     lubridate
-Suggests: akima
+Suggests: akima,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

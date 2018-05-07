@@ -1,0 +1,150 @@
+---
+title: "Plotting SEA Data"
+author: "Ben Harden"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Plotting SEA Data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(sea)
+```
+
+This vignette describes the tools available in the sea package for plotting data recorded by the Sea Education Assocation aboard their sailing school vessels. Archive data should be initially prepared using the data reading tools outlined in the "Reading SEA data" vignette. We assume heading into this vignette that we have data preprossed and in the correct form for plotting.
+
+# Preamble
+
+## Example data sets
+
+The Reading SEA datasets vignette explains what and how SEA data can be read into R. These datasets can be combined into one object using the `package_data()` function. This object is an R list with each element of that list pertaining to different data streams. 
+
+```{r}
+summary(S275)
+```
+
+Each data stream can be accessed using the `$` operator (recommended), numeric index, or named index. e.g. `S275$elg`, `S275[[1]]`, and `S275[["elg"]]` will all work to extract the elg data from the S275 cruise object.
+
+You can make these combined datasets yourself using the `package_data()` function. I've included a few example datasets int he package for demonstration purposes and I'll be using these combined data sets throughout this vignette for ease of explanation without getting bogged-down in the details of reading a data set
+
+## Package Dependencies
+
+Many of the data visualizations we are going to make depend naturally on other plotting packages. The majority of the plots we wil make are based on ggplot and its Grammar of Graphics. ggplot is a dependency of the sea package which means that you computer should have checked whether it was installed (and installed it if not) before installing the sea package. We also rely on the oce package for some of the visualization of the CTD data.
+
+# Mapping
+
+Many of SEA's datasets are appropriate for mapping. This includes cruise track, surface temperature, net biovolume, and ocean currents. The basic idea is we lay some representation of these parameters onto a map of the region where the ship was sampling.
+
+For example, here is a map of the surface temperatures recorded during the S275 cruise:
+
+```{r S275_temp}
+plot_flowthru(S275)
+```
+
+`plot_flowthru()` is one in a series of functions that we will explore that allows us to plot the cruise data on a map in the following sections.
+
+## Basic workflow
+
+The maps in this section are all built piece-meal from a combination of functions. In general, the `make_*` functions will create layers that can be added together and the `plot_*` functions will combine these layers to produce a graphic.
+
+## Base Maps
+
+We begin with the foundation of all the maps we will make in this vignette, `make_base_map`. This function is called automatically by all of the other map plotting functions. Its job is to create a base map with the following features:
+
+- Land masses
+- Properly proportioned axes (important for mapping spatial data)
+- Well formatted axis labels
+
+```{r}
+make_base_map(S275)
+```
+
+In this example, the function is automatically recognizing that S275 is a combined cruise object, extracting the longitude and latitude range from the data held within, and plotting a region with an extra 15% space around the region (this can be changed with the `factor` parameter in the function call.)
+
+Alternatively, you can also specify some arbrtrary region using `lonlim` and `latlim`:
+
+```{r}
+make_base_map(lonlim = c(-72,-69), latlim = c(41,43))
+```
+
+`lonlim` and `latlim` do not need to be both specified and will override any information extracted from the dataset provided. As such, they can also be used to zoom in on a region of interest within the large cruise track. For examples like this where you are looking at a small geographic region, you might want to use the `high_res` coastline:
+
+```{r}
+make_base_map(lonlim = c(-72,-69), latlim = c(41,43), high_res = T)
+```
+
+For higher resolutions, you would need to provide an additional data product.
+
+## Cruise Track
+
+Beyond just the base map, the simplest of all plots is the ship's cruise track:
+
+```{r cruise_track}
+plot_track(S275)
+```
+
+As in the surface temperature example, the R code is recognizing that we've entered a combined data object and is extracting the cruise track data and plotting.
+
+As I described above, the `plot_*` functions are essentially just wrappers for some combination of the `make_*` functions. In this case:
+
+
+```{r}
+make_base_map(S275) +
+  make_track(S275)
+```
+
+The `plot_*` wrapper is clearly more efficient, while also allowing you to pass parameters to the `make_*` functions.
+
+```{r}
+plot_track(S275, latlim = c(-20,-15), lonlim = c(175,-175), high_res = T, data_source = "hourly")
+```
+
+In this example I've also shown you how you can specify the data source for the cruise track. The default is the elg file (if it is available), followed by the hourly. You could also get the same result by just specifying the data to plot from just being the houlry part of the combined cruise object: `S275$hourly`.
+
+This example also shows the functionality of the map functions when we cross the anti-meridion. The functions automatically determine if the data crosses the antimeridion, produce alternative longitudes in the data without the 360 degree discontinuity (adds 360 to all negative longitudes) and then formats the labels to who both E and W longitudes.
+
+## Flow-through Data
+
+We can also add another dimension to these map plots by plotting a varible along our track in a number of ways. A basic one is through color. Let's switch up the cruise data just to keep things fresh:
+
+```{r}
+plot_flowthru(C276B)
+```
+This is the default plot that includes:
+
+- As before, a well formatted region and land masses made by `make_base_map()`
+- Surface temperatures plotted as colored dots every 60 minutes
+- A title which is the well-formated name of the field being plotted
+
+The default option draws from the elg data, so you'd need to specify the `data_source` if you want or need the data from the hourly dataset. We can change the default plot by passing parameters to `make_base_map()` as before and by providing additonal options to the function. For example, you can specify the variable you would like to plot from the variable names in the data set. These can be seen as follows:
+
+```{r}
+names(C276B$elg)
+```
+
+or `C276B$hourly` if you are choosing to use that as your dataset to plot (NB: the variable names have been standardized in the reading process so you should be able to use variable names interchangably between these data sources.)
+
+You can also change the plotting incriment from the standard 60 minutes by using `step`, which is the raw number of data points between plotted points. This `step` will depend on the data source being used. For example, `step = 60` will be 60 minutes for an elg data and 60 hours for hourly data.
+
+You can (should) also specify the colormap you would like to use for the plot using one of the `oce` package oceanography colormaps. I am hoping to automate this process in the coming months to ensure that each variable is matched to the appropriate color map, but for now, the following will produce a map of surface salinity every 3 hours.
+
+```{r}
+plot_flowthru(C276B, var = "sal", step = 180, colormap = oce::oce.colorsSalinity(), title = "Salinity every 3 hours")
+```
+
+The color ranges for the plots are automatically generated based on the range of the data. In addition, you might want to specify your own ranges for example if there are extrema which are washing-out the rest of the colors, or if you are zooming in on a specific region. You can do this in two ways. `ran_val` is a vector of length 2 specifying the lower and upper bounds of the data you want to plot between. `ran_qua` is a vector of length 2 which specifies the lower and upper quartile to plot between (the default plotting range is actually set to the 1st and 99th quantiles). These should be expressed as decimal values between 0 and 1.
+
+```{r}
+plot_flowthru(C276B, ran_qua = c(0.2,0.8), title = "Temperature between 20th and 80th quantiles")
+```
+
+This is obviously an extreme example, but shows that all values above and below the cut offs have been saturated out to be the same color.
+
+
+

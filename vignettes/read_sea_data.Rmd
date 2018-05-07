@@ -1,0 +1,52 @@
+---
+title: "Reading SEA Sata"
+author: "Ben Harden"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Reading SEA Data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This Vignette Summarizes the tools in the sea package that are used to read and process datasets collected by the Sea Education Association (SEA) aboard their sailing school vessels.
+
+# Data Collection
+
+SEA has two currently operational sailing school vessels (SSVs), the Corwith Cramer and the Robert C. Seamans. The SSV Westward was also opperated by SEA until the early 2000s. On board each vessel, SEA maintains a diverse research lab that...
+
+## Data integrity
+
+
+# Supported Data
+
+This section outlines the supported data sets at time of writing.
+
+## Excel Datasheets
+
+Many SEA data streams have historically been recorded in Excel workbooks. Currently, the sea package can read the following of these datasets:
+
+  - hourlywork: Houlry data collection (e.g. surface temperature, salinity, fluoroesence, wind speed/direction, ...)
+  - surfsamp: Discrete surface samples mainly for chemical analyses (e.g. Nutrients, pH, Oxygen, ...)
+  - hydrowork: bottle sample data from carousel deployments (as surfsamp, but for subsurface measurements)
+  - nueston: tow data from the nueston net (e.g. biovolume, zooplankton diversity, microplastics, ...)
+
+## Event Files
+
+SEA records a continuous data stream of surface parameters in an Event File. This is created by the [SCS Program](https://oceanexplorer.noaa.gov/technology/tools/scs/scs.html), which agregates data streams from various shipboard sensors including the GPS, flow-through system (temperature, salinity, etc.), CHIRP, anemometer, etc. Typically the output is at a 1-minute time resolution.
+
+## CTD
+
+SEA's CTD data are electronic profiles of ocean parameters recorded, typically, by a SeaBird CTD. This data can included auxilary sensors including a Fluorometer, O2 sensor, Transmissomer, and PAR sensor.
+
+## ADCP
+
+SEA has a hull-mounted Accoustic Doppler Current Profiler which measures vertical profiles of water velocity.
+
