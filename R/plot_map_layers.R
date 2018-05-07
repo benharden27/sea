@@ -11,7 +11,7 @@
 #' @examples
 make_base_map <- function(df = NULL, lonlim = NULL, latlim = NULL,
                           data_source = 'hourly', plot_bathy = F, high_res = F,
-                          title = "", factor = 0.15) {
+                          title = "", factor = 0.15, buffer = 5) {
 
   # choose which resolution of coastline
   if(high_res == T) {
@@ -49,8 +49,11 @@ make_base_map <- function(df = NULL, lonlim = NULL, latlim = NULL,
       bathy <- extract_bathy(df)
 
     # Set longitude limits if not prescribed
-    if(is.null(lonlim))
+    if(is.null(lonlim)) {
       lonlim <- set_ll_lim(df$lon, factor = factor)
+    } else if (check_antimerid(lonlim)) {
+      lonlim[lonlim<0] <- lonlim[lonlim<0] + 360
+    }
 
     # Set latitude limits if not prescribed
     if(is.null(latlim))
@@ -65,7 +68,7 @@ make_base_map <- function(df = NULL, lonlim = NULL, latlim = NULL,
   }
 
   # subset coastline data (TODO: need to ensure that 5 degs is a good selection for buffer)
-  coastline <- subset(coastline,long > lonlim[1]-5 & long < lonlim[2]+5 & lat > latlim[1]-5 & lat < latlim[2]+5)
+  coastline <- subset(coastline,long > lonlim[1]-buffer & long < lonlim[2]+buffer & lat > latlim[1]-buffer & lat < latlim[2]+buffer)
 
   # start ggplot of base map
   base_map <- ggplot2::ggplot()
@@ -108,9 +111,10 @@ make_base_map <- function(df = NULL, lonlim = NULL, latlim = NULL,
 
 #
   base_map <- base_map +
-    ggplot2::scale_x_continuous(breaks = xlabs_old, labels = xlabs, limits = lonlim) +
-    ggplot2::scale_y_continuous(breaks = ylabs_old, labels = ylabs, limits = latlim)
+    ggplot2::scale_x_continuous(breaks = xlabs_old, labels = xlabs) +
+    ggplot2::scale_y_continuous(breaks = ylabs_old, labels = ylabs)
 
+  #
 
   return(base_map)
 }
