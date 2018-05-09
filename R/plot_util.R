@@ -164,7 +164,7 @@ set_ll_lim <- function(ll,factor=0.15) {
 #'
 #' @examples
 check_antimerid <- function(df) {
-  if(is.data.frame(df)) {
+  if(is.data.frame(df) | is.list(df)) {
     diff(range(df$lon,na.rm=T))>300
   } else {
     diff(range(df,na.rm=T))>300
