@@ -130,6 +130,7 @@ prep_section_ctd <- function(sec, var = "temperature", select = NULL, dist_vec =
     if(is.null(select)) {
       select = 1:length(sec)
     }
+    ctd <- sec
     sec <- make_section(sec,select = select)
   } else {
     if(is.null(select)) {
@@ -142,7 +143,6 @@ prep_section_ctd <- function(sec, var = "temperature", select = NULL, dist_vec =
   s <- oce::sectionGrid(sec)
 
   # create variables for number of stations and their lat/lons
-  nstation <- length(s[['station']])
   latctd <- s@metadata$latitude
   lonctd <- s@metadata$longitude
 
@@ -172,26 +172,27 @@ prep_section_ctd <- function(sec, var = "temperature", select = NULL, dist_vec =
       }
     }
 
-    # subset to just those that were selected along section
-    s <- subset(s,!is.na(distctd))
-    dist_vec <- distctd[!is.na(distctd)]
-
+    dist_vec <- distctd
   }
 
   p <- unique(s[['pressure']])
   d <- oce::swDepth(p, mean(latctd, na.rm = TRUE))
-
-  # Set up v arrays for plotting
-  v <- array(NA, dim = c(nstation, length(p)))
-  for (i in 1:nstation) {
-    v[i, ] <- s[['station']][[i]][[var]]
-  }
 
   if(is.null(dist_vec)) {
     dist <- oce::geodDist(sec, alongPath=T)
   } else {
     dist <- dist_vec
   }
+
+
+  # Set up v arrays for plotting
+  v <- array(NA, dim = c(length(which(!is.na(dist))), length(p)))
+  for (i in which(!is.na(dist))) {
+    v[i, ] <- s[['station']][[i]][[var]]
+  }
+
+  dist <- dist[!is.na(dist)]
+
 
   X <- list(data_lon = lonctd, data_lat = latctd, along_section = along_section,
             sec_lon = sec_lon, sec_lat = sec_lat,
@@ -279,22 +280,10 @@ prep_section_hydro <- function(df, var = "chla", select = NULL, dist_vec = NULL,
     if(length(which(!is.na(prof[[var]]))) == 0) {
       v[i, ] <- rep(NA,length(d))
     } else {
-      v[i, ] <- approx(prof$z,prof[[var]],d)$y
+      v[i, ] <- approx(prof$z,prof[[var]],d,rule=2:1)$y
     }
   }
 
-  # if(is.null(xo))
-  #   xo <- pretty(dist,n = floor(length(stations)*2), n_min = length(stations))
-  #
-  # if(is.null(yo))
-  #   yo <- seq(5, 600, 50)
-  #
-  # df <- dplyr::mutate(df[sti, ], dist = dist)
-  #
-  # ran <- !is.na(df[[var]])
-  #
-  # z <- akima::interp(df$dist[ran], df$z[ran], df[[var]][ran],
-  #                      xo = xo, yo = yo, linear = TRUE)
 
   X = list(data_lon = lonloc, data_lat = latloc, along_section = along_section,
            sec_lon = sec_lon, sec_lat = sec_lat,
@@ -318,7 +307,7 @@ prep_section_hydro <- function(df, var = "chla", select = NULL, dist_vec = NULL,
 #' @examples
 prep_section_adcp <- function(X, select = NULL, dist_vec = NULL,
                               along_section = F, sec_lon = NULL, sec_lat = NULL,
-                              dx = 5, dz = 25, width = 10) {
+                              dx = 5, dz = 25, width = 10, grid = F, ...) {
 
   if(!is.null(select)) {
     X$lon <- X$lon[select]
@@ -383,12 +372,61 @@ prep_section_adcp <- function(X, select = NULL, dist_vec = NULL,
     dist <- dist_vec
   }
 
+  depth <- seq(10,600, length.out = 60)
+
+  if(grid == TRUE) {
+
+    rows = dim(u)[1]
+    cols = dim(u)[2]
+
+    depth <-unlist(purrr::map(depth,rep,times=rows))
+    dist <- rep(dist,cols)
+
+    u <- grid_section(tibble::tibble(var=as.vector(u),dist=dist,depth=depth), ...)
+    u <- u$z;
+    v <- grid_section(tibble::tibble(var=as.vector(v),dist=dist,depth=depth), ...)
+    dist <- v$x
+    depth <- v$y
+    v <- v$z
+
+
+  }
+
+
   X <- list(data_lon = X$lon, data_lat = X$lat, along_section = along_section,
             sec_lon = sec_lon, sec_lat = sec_lat,
             dist_vec = dist_vec, width = width, dx = dx, dz = dz,
-            d = seq(10,600, length.out = 60), x = dist, var = list(u=u,v=v), name = "current", type = "adcp")
+            d = depth, x = dist, var = list(u=u,v=v), name = "current", type = "adcp")
 
 }
 
+
+#' Grid section data onto a regular dist-depth grid
+#'
+#' @param df a data frame with three columns for var, dist, depth
+#' @param xo distance vector
+#' @param zo depth vector
+#'
+#' @return
+#' @export
+#'
+#' @examples
+grid_section <- function(df, xo = NULL, zo = NULL, ...) {
+
+  # Set xo and zo to best guesses if not already perscribed
+  n = length(unique(df$dist))
+  if(is.null(xo))
+    xo <- pretty(df$dist,n = n*2, n_min = n)
+
+  if(is.null(zo))
+    zo <- seq(5, 600, 50)
+
+
+  ran <- !is.na(df$var)
+
+  z <- akima::interp(df$dist[ran], df$depth[ran], df$var[ran],
+                         xo = xo, yo = zo, linear = TRUE, ...)
+
+}
 
 
