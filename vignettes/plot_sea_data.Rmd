@@ -144,7 +144,43 @@ The color ranges for the plots are automatically generated based on the range of
 plot_flowthru(C276B, ran_qua = c(0.2,0.8), title = "Temperature between 20th and 80th quantiles")
 ```
 
-This is obviously an extreme example, but shows that all values above and below the cut offs have been saturated out to be the same color.
+This is obviously an extreme example, but shows that all values above and below the cut offs have been saturated out to be the same color as the maximum and minimum of the range.
+
+## Wind and Currents
+
+You have the option to plot the wind and current data on a map too, using the `make_vectors` function. This takes u and v components of come velocity field at a series of locations and produces well-formated lines that point in the direction the current/wind is flowing in. The data structures of the wind field (stored in houlry data) and the current field mean that it's been simpler to have two separate functions. For the wind:
+
+```{r}
+plot_wind(C277A)
+```
+
+This is the default plot with wind vectors set to a certain scale and plotted every hour. The default behavour is tuned to work best for long SEA Semester programs, e.g.
+
+```{r}
+plot_wind(S269)
+```
+
+For shorter trips in a more enclosed domain, you'll need to adjust the `scale` and `step` options, and again, there's the `high_res` option.
+
+```{r}
+plot_wind(C277A, scale = 0.075, step = 20, high_res = T)
+```
+
+At the moment, the domain doesn't automatically scale if vectors impinge on the edge. You'd need to set `lonlim` and `latlim` if you want to see all the vectors. There is also scale bar as yet, it's coming soon.
+
+Similarly, the `plot_current()` function works like this:
+
+```{r}
+plot_current(C277A)
+```
+
+The current data is recorded every 20 mins so the default `step = 1` gives you vectors every 20 mins. The default plot is the shallowest bin from the ADCP data. Currently, there is no support for plotting other layers. That'll come soon. Again, `scale`, `step` and `lonlim`/`latlim` can be adjusted to get the look you need depending on your cruise track and goals. At the moment the default plot is the first bin
+
+
+
+
+
+
 
 
 
