@@ -266,6 +266,7 @@ read_hydrocast <- function(filein) {
                           "o2_sens","^o2.*sea",readr::parse_double,
                           "o2_wink","^o2.*wink",readr::parse_double,
                           "pH","ph",readr::parse_double,
+                          "alk","^total.*alk",readr::parse_double,
                           "notes","notes",readr::parse_character
   )
 
