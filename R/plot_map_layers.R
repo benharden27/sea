@@ -220,8 +220,13 @@ make_vectors <- function(df, data_source = "elg", step = 60, scale = 1) {
   df <- format_lon(df)
 
   if(data_source == "adcp") {
-    u <- df$u[ ,1]
-    v <- df$v[ ,1]
+    if(is.null(dim(df$u))) {
+      u <- df$u
+      v <- df$v
+    } else {
+      u <- df$u[ ,1]
+      v <- df$v[ ,1]
+    }
     df <- tibble::tibble(lon = df$lon, lat = df$lat, u = u * scale, v = v * scale)
   } else {
     uv <- wswd_to_uv(df$wind_sp, df$wind_dir)
@@ -235,7 +240,7 @@ make_vectors <- function(df, data_source = "elg", step = 60, scale = 1) {
   ran <- seq(1,nrow(df),step)
 
   # TODO add arrows to end of line rather than dots
-  out <- ggplot2::geom_segment(ggplot2::aes(x = lon, y = lat, xend = lone, yend = late), data = df[ran, ])
+  out <- ggplot2::geom_segment(ggplot2::aes(x = lon, y = lat, xend = lone, yend = late), data = df[ran, ], color = "red")
 
 }
 

@@ -425,7 +425,7 @@ grid_section <- function(df, xo = NULL, zo = NULL, ...) {
   ran <- !is.na(df$var)
 
   z <- akima::interp(df$dist[ran], df$depth[ran], df$var[ran],
-                         xo = xo, yo = zo, linear = TRUE, ...)
+                         xo = xo, yo = zo, linear = FALSE, ...)
 
 }
 
