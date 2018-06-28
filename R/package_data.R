@@ -75,8 +75,13 @@ package_data <- function(root_folder,cruiseID=NULL,...) {
 
   # then ctd
   ctd_fold <- file.path(root_folder,"CTD","Cnv")
-  if(length(list.files(adcp_fold)) == 0) {
-    ctd <- NULL
+  if(length(list.files(ctd_fold)) == 0) {
+    ctd_fold <- file.path(root_folder,"cnv")
+    if(length(list.files(ctd_fold)) == 0) {
+      ctd <- NULL
+    } else {
+      ctd <- read_ctd_fold(ctd_fold)
+    }
   } else {
     ctd <- read_ctd_fold(ctd_fold)
   }
