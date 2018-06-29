@@ -32,8 +32,20 @@ make_base_map <- function(df = NULL, lonlim = NULL, latlim = NULL,
 
     # if the input is an sea dataframe then extract the hourly (default) component
     # should add a contigency if no hourly data exists
+    data_options <- c("hourly","elg","neuston","hyrdowork","surfsamp","hourly")
     if(is_sea_struct(df)) {
-      df <- select_data(df,data_source)
+      df1 <- NULL
+      i <- 1
+      while(is.null(df1) & i < length(data_options)+1) {
+
+        df1 <- try(select_data(df,data_options[i]),silent = TRUE)
+        if(inherits(df1,"try-error")) {
+          df1 <- NULL
+          i <- i + 1
+        } else {
+          df <- df1
+        }
+      }
     }
 
     # if lon doesn't cross antimeridion, subtract 360 from
