@@ -111,3 +111,59 @@ find_datasheet <- function(files,pattern) {
 }
 
 
+#' Convert a cnv file to a csv file
+#'
+#' @param in_file
+#' @param out_fold
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
+cnv_to_csv <- function(in_file,out_fold, overwrite = F, ...) {
+
+  in_file_end <- tail(stringr::str_split(in_file,"/")[[1]],1)
+  out_file <- stringr::str_replace(in_file_end,"\\.cnv","\\.csv")
+
+  if(file.exists(file.path(out_fold,out_file)) & overwrite == F) {
+    warning("File already exists in output, set overwrite=T to replace")
+  } else {
+    ctd <- read_ctd(in_file, ...)
+
+    ctd_tib <- tibble::tibble(press = ctd@data$pressure,
+                              depth = ctd@data$depth,
+                              dens = ctd@data$sigmaTheta,
+                              salt = ctd@data$salinity,
+                              temp = ctd@data$theta,
+                              O2 = ctd@data$oxygen,
+                              fluor = ctd@data$fluorescence,
+                              par = ctd@data$par)
+
+    readr::write_csv(ctd_tib,file.path(out_fold,out_file))
+  }
+}
+
+
+#' Convert all cnv files in a folder to csv
+#'
+#' @param in_fold
+#' @param out_fold
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
+cnv_to_csv_fold <- function(in_fold,out_fold, ...) {
+
+  files <- list.files(in_fold,pattern = "\\.cnv")
+
+  for (i in 1:length(files)) {
+    cnv_to_csv(file.path(in_fold,files[i]), out_fold, ...)
+  }
+
+}
+
+
+
