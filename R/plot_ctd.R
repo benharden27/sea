@@ -12,7 +12,7 @@
 #' @export
 #'
 #' @examples
-plot_section <- function(X, adcp_var = "u", breaks = NULL, zlim = NULL, ylim = c(0,600), colormap = oce::oce.colorsTemperature()) {
+plot_section <- function(X, adcp_var = "u", breaks = NULL, zlim = NULL, ylim = c(0,600), colormap = oce::oce.colorsTemperature(), ...) {
 
   di <- find_near(X$d,ylim[1]):find_near(X$d,ylim[2])
 
@@ -54,7 +54,7 @@ plot_section <- function(X, adcp_var = "u", breaks = NULL, zlim = NULL, ylim = c
   oce::imagep(X$x, X$d, X$var, colormap = var_cm, flipy = TRUE, ylab = 'Depth [m]',
               filledContour = TRUE, missingColor = NULL,
               drawTriangles = T, ylim = ylim, zlim = zlim,
-              zlabPosition = 'side')
+              zlabPosition = 'side', ...)
 
   # # Add lines and labels
   # cur <- 1
