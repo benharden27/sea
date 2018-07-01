@@ -13,6 +13,12 @@ read_adcp <- function(adcp_file) {
   # reads in the file as individual lines
   r <- readr::read_lines(adcp_file)
 
+  # find the first bin depth and bin size
+  si <- stringr::str_which(r, "1st Bin")
+  bin1 <- as.numeric(tail(stringr::str_split(r[si],"\t")[[1]],1))
+  di <- stringr::str_which(r, "Bin Size")
+  binsize <- as.numeric(tail(stringr::str_split(r[di],"\t")[[1]],1))
+
   # finds the header line index and return headerline
   hi <- stringr::str_which(r, "^Ens.*Eas")
 
@@ -38,6 +44,7 @@ read_adcp <- function(adcp_file) {
   lon <- c(a[loni])[[1]]
   lat <- c(a[lati])[[1]]
 
+  d <- seq(bin1,by = binsize, length.out = dim(u)[2])
   dttm <- lubridate::ymd_hms(paste(a$YR,a$MO,a$DA,a$HH,a$MM,a$SS), tz = "UTC")
 
   # ensure that u and v are output as numeric
@@ -46,7 +53,7 @@ read_adcp <- function(adcp_file) {
   lon <- as.numeric(lon)
   lat <- as.numeric(lat)
 
-  return(list(dttm = dttm, u = u, v = v, lon = lon, lat = lat))
+  return(list(u = u, v = v, dttm = dttm, lon = lon, lat = lat, d = d))
 
 }
 
@@ -79,6 +86,9 @@ read_adcp_fold <- function(adcp_fold, stack = T) {
       X2 <- read_adcp(adcp_file60)
       X$u <- cbind(X$u,X2$u)
       X$v <- cbind(X$v,X2$v)
+      dd <- diff(X$d)[1]
+      X$d <- append(X$d,X2$d-X2$d[1]+dd+tail(X$d,1))
+
     } else {
       X$u <- cbind(X$u,matrix(NA,dim(X$u)))
       X$v <- cbind(X$v,matrix(NA,dim(X$v)))
@@ -87,6 +97,7 @@ read_adcp_fold <- function(adcp_fold, stack = T) {
     Y$lon <- append(Y$lon,X$lon)
     Y$lat <- append(Y$lat,X$lat)
     Y$dttm <- append(Y$dttm,X$dttm)
+    Y$d <- append(Y$d,X$d)
     Y$u <- rbind(Y$u,X$u)
     Y$v <- rbind(Y$v,X$v)
   }
@@ -108,12 +119,12 @@ read_adcp_ens <- function(adcp_file) {
   adcp <- oce::read.adp(adcp_file)
   adcp@data$v[,,1] <- adcp@data$v[,,1] + adcp@data$speedMadeGoodEast
   adcp@data$v[,,2] <- adcp@data$v[,,2] + adcp@data$speedMadeGoodNorth
-  adcp@data$v[,,3] <- adcp@data$v[,,3] + adcp@data$firstLatitude
 
   lat <- rowMeans(cbind(adcp@data$firstLatitude,adcp@data$lastLatitude))
   lon <- rowMeans(cbind(adcp@data$firstLongitude,adcp@data$lastLongitude))
   dttm <- rowMeans(cbind(adcp@data$firstTime,adcp@data$lastTime))
+  d <- adp@data$distance
 
-  adcp <- list(dttm = dttm, u = adcp@data$v[ , , 1], v = adcp@data$v[ , , 2],
-               lon = lon, lat = lat)
+  adcp <- list(u = adcp@data$v[ , , 1], v = adcp@data$v[ , , 2],
+               dttm = dttm, lon = lon, lat = lat, d = d)
 }
