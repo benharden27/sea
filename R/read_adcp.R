@@ -95,3 +95,25 @@ read_adcp_fold <- function(adcp_fold, stack = T) {
 
 }
 
+
+#' Read ADCP file that is a winADCP output
+#'
+#' @param adcp_file
+#'
+#' @return
+#' @export
+#'
+#' @examples
+read_adcp_ens <- function(adcp_file) {
+  adcp <- oce::read.adp(adcp_file)
+  adcp@data$v[,,1] <- adcp@data$v[,,1] + adcp@data$speedMadeGoodEast
+  adcp@data$v[,,2] <- adcp@data$v[,,2] + adcp@data$speedMadeGoodNorth
+  adcp@data$v[,,3] <- adcp@data$v[,,3] + adcp@data$firstLatitude
+
+  lat <- rowMeans(cbind(adcp@data$firstLatitude,adcp@data$lastLatitude))
+  lon <- rowMeans(cbind(adcp@data$firstLongitude,adcp@data$lastLongitude))
+  dttm <- rowMeans(cbind(adcp@data$firstTime,adcp@data$lastTime))
+
+  adcp <- list(dttm = dttm, u = adcp@data$v[ , , 1], v = adcp@data$v[ , , 2],
+               lon = lon, lat = lat)
+}
