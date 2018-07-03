@@ -125,8 +125,8 @@ read_adcp_ens <- function(adcp_file) {
   dttm <- rowMeans(cbind(adcp@data$firstTime,adcp@data$lastTime))
   d <- adcp@data$distance
 
-  adcp <- list(u = adcp@data$v[ , , 1], v = adcp@data$v[ , , 2],
-               dttm = dttm, lon = lon, lat = lat, d = d)
+  adcp <- list(lon = lon, lat = lat, dttm = dttm, d = d,
+               u = adcp@data$v[ , , 1], v = adcp@data$v[ , , 2])
 }
 
 
