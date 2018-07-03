@@ -151,7 +151,7 @@ make_track <- function(df,data_source = "elg") {
   df <- format_lon(df)
 
   if(data_source == "adcp")
-    df <- as.data.frame(df)
+    df <- as.data.frame(head(df,2))
 
   # return a geom_path object from the lon and lat data
   out <- ggplot2::geom_path(ggplot2::aes(lon,lat),data=df)
@@ -236,8 +236,8 @@ make_vectors <- function(df, data_source = "elg", step = 60, scale = 1) {
       u <- df$u
       v <- df$v
     } else {
-      u <- df$u[ ,1]
-      v <- df$v[ ,1]
+      u <- rowMeans(df$u[ ,1:5],na.rm=T)
+      v <- rowMeans(df$v[ ,1:5],na.rm=T)
     }
     df <- tibble::tibble(lon = df$lon, lat = df$lat, u = u * scale, v = v * scale)
   } else {
