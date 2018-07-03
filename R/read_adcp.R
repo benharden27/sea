@@ -123,8 +123,61 @@ read_adcp_ens <- function(adcp_file) {
   lat <- rowMeans(cbind(adcp@data$firstLatitude,adcp@data$lastLatitude))
   lon <- rowMeans(cbind(adcp@data$firstLongitude,adcp@data$lastLongitude))
   dttm <- rowMeans(cbind(adcp@data$firstTime,adcp@data$lastTime))
-  d <- adp@data$distance
+  d <- adcp@data$distance
 
   adcp <- list(u = adcp@data$v[ , , 1], v = adcp@data$v[ , , 2],
                dttm = dttm, lon = lon, lat = lat, d = d)
+}
+
+
+#' Read all ADCP Ensemble files in a folder and combine
+#'
+#' @param adcp_fold
+#'
+#' @return
+#' @export
+#'
+#' @examples
+read_adcp_ens_fold <- function(adcp_fold) {
+
+  files <- list.files(adcp_fold,".LTA")
+
+  for (i in 1:length(files)) {
+
+    file <- file.path(adcp_fold,files[i])
+    adcp_add <- read_adcp_ens(file)
+    if (i == 1) {
+      adcp <- adcp_add
+      dvec <- adcp$d
+    } else {
+      if(!sum(adcp_add$d==dvec) == length(dvec)) {
+        u <- as.vector(adcp_add$u)
+        dttm <- rep(adcp_add$dttm,ncol(adcp_add$u))
+        d <- unlist(purrr::map(adcp_add$d,rep,nrow(adcp_add$u)))
+        isna <- !is.na(u)
+        u <- u[isna]
+        dttm <- dttm[isna]
+        d <- d[isna]
+        adcp_add$u <- akima::interp(dttm,
+                                    d,
+                                    u,
+                                    adcp_add$dttm,
+                                    dvec)$z
+        v <- as.vector(adcp_add$v)
+        v <- v[isna]
+        adcp_add$v <- akima::interp(dttm,
+                                    d,
+                                    v,
+                                    adcp_add$dttm,
+                                    dvec)$z
+        adcp_add$d <- dvec
+      }
+      adcp$u <- rbind(adcp$u,adcp_add$u)
+      adcp$v <- rbind(adcp$v,adcp_add$v)
+      adcp$lon <- append(adcp$lon,adcp_add$lon)
+      adcp$lat <- append(adcp$lat,adcp_add$lat)
+      adcp$dttm <- append(adcp$dttm,adcp_add$dttm)
+    }
+  }
+  return(adcp)
 }

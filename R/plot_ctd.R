@@ -19,8 +19,10 @@ plot_section <- function(X, adcp_var = "u", breaks = NULL, zlim = NULL, ylim = c
   if(X$type == "adcp") {
     if(adcp_var == "u") {
       X$var <- X$var$u[ , di]
+      X$d <- X$d[di]
     } else {
       X$var <- X$var$v[ , di]
+      X$d <- X$d[di]
     }
   } else {
     X$var <- X$var[ ,di]
@@ -372,7 +374,7 @@ prep_section_adcp <- function(X, select = NULL, dist_vec = NULL,
     dist <- dist_vec
   }
 
-  depth <- seq(10,600, length.out = 60)
+  depth <- X$d
 
   if(grid == TRUE) {
 
