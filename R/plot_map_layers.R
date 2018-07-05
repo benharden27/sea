@@ -236,8 +236,8 @@ make_vectors <- function(df, data_source = "elg", step = 60, scale = 1) {
       u <- df$u
       v <- df$v
     } else {
-      u <- rowMeans(df$u[ ,1:5],na.rm=T)
-      v <- rowMeans(df$v[ ,1:5],na.rm=T)
+      u <- rowMeans(df$u[ ,1:10],na.rm=T)
+      v <- rowMeans(df$v[ ,1:10],na.rm=T)
     }
     df <- tibble::tibble(lon = df$lon, lat = df$lat, u = u * scale, v = v * scale)
   } else {
