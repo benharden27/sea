@@ -252,7 +252,10 @@ make_vectors <- function(df, data_source = "elg", step = 60, scale = 1) {
   ran <- seq(1,nrow(df),step)
 
   # TODO add arrows to end of line rather than dots
-  out <- ggplot2::geom_segment(ggplot2::aes(x = lon, y = lat, xend = lone, yend = late), data = df[ran, ], color = "red")
+  out <- ggplot2::geom_segment(ggplot2::aes(x = lon, y = lat, xend = lone, yend = late),
+                               data = df[ran, ], color = "red",
+                               arrow = ggplot2::arrow(length=unit(0.1,"inches"),
+                                                      type = "closed"))
 
 }
 
