@@ -120,6 +120,18 @@ read_adcp_ens <- function(adcp_file) {
   adcp@data$v[,,1] <- adcp@data$v[,,1] + adcp@data$speedMadeGoodEast
   adcp@data$v[,,2] <- adcp@data$v[,,2] + adcp@data$speedMadeGoodNorth
 
+  if(hasName(adcp@data,"br")) {
+    dblank = 25
+    br <- rowMeans(adcp@data$br,na.rm = T) - dblank
+    iblank <- sea::find_near(adcp@data$distance,br)
+    nd <- length(adcp@data$distance)
+    for (i in 1:length(iblank)) {
+      adcp@data$v[i,iblank[i]:nd,1] <- NA
+      adcp@data$v[i,iblank[i]:nd,2] <- NA
+    }
+
+  }
+
   lat <- rowMeans(cbind(adcp@data$firstLatitude,adcp@data$lastLatitude))
   lon <- rowMeans(cbind(adcp@data$firstLongitude,adcp@data$lastLongitude))
   dttm <- rowMeans(cbind(adcp@data$firstTime,adcp@data$lastTime))
