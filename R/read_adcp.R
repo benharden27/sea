@@ -76,7 +76,7 @@ read_adcp_fold <- function(adcp_fold, stack = T) {
   file_start30 <- stringr::str_extract(files30,".*_.*_.*_")
   file_start60 <- stringr::str_extract(files60,".*_.*_.*_")
 
-  Y <- list(lon = NULL, lat = NULL, dttm = lubridate::ymd_hms(NULL), u = NULL, v= NULL)
+  Y <- list(lon = NULL, lat = NULL, dttm = lubridate::ymd_hms(NULL), u = NULL, v= NULL, d = NULL)
 
   for (i in 1:length(files30)) {
     adcp_file30 <- file.path(adcp_fold, files30[i])
@@ -97,10 +97,11 @@ read_adcp_fold <- function(adcp_fold, stack = T) {
     Y$lon <- append(Y$lon,X$lon)
     Y$lat <- append(Y$lat,X$lat)
     Y$dttm <- append(Y$dttm,X$dttm)
-    Y$d <- append(Y$d,X$d)
     Y$u <- rbind(Y$u,X$u)
     Y$v <- rbind(Y$v,X$v)
   }
+
+  Y$d <- X$d
 
   return(Y)
 
