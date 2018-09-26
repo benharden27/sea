@@ -73,6 +73,10 @@ read_adcp_fold <- function(adcp_fold, stack = T) {
   files30 <- list.files(adcp_fold, pattern = paste0("ADCP.*1-30\\.txt"))
   files60 <- list.files(adcp_fold, pattern = paste0("ADCP.*31-60\\.txt"))
 
+  if(length(files30) == 0) {
+    return(NULL)
+  }
+
   file_start30 <- stringr::str_extract(files30,".*_.*_.*_")
   file_start60 <- stringr::str_extract(files60,".*_.*_.*_")
 
