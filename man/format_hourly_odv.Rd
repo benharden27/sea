@@ -2,7 +2,7 @@
 % Please edit documentation in R/odv.R
 \name{format_hourly_odv}
 \alias{format_hourly_odv}
-\title{Format Houlry Data for ODV inport}
+\title{Format Hourly Data for ODV inport}
 \usage{
 format_hourly_odv(data, file, cruiseID = NULL)
 }
@@ -10,5 +10,5 @@ format_hourly_odv(data, file, cruiseID = NULL)
 \item{data}{}
 }
 \description{
-Format Houlry Data for ODV inport
+Format Hourly Data for ODV inport
 }

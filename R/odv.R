@@ -1,4 +1,54 @@
-#' Format Houlry Data for ODV inport
+#' Format
+#'
+#' @param data
+#' @param folder
+#'
+#' @return
+#' @export
+#'
+#' @examples
+format_odv <- function(data,folder,...) {
+
+  # Return error is data is not a sea structure
+  if(!is_sea_struct(data)) {
+    stop("Data is not a sea package structure")
+  }
+
+  # create folder if it doesn't exist
+  if (!file.exists(folder)){
+    dir.create(folder)
+  }
+
+  # select the fields
+  fields <- c("hourly","surfsamp","neuston")
+
+  for (field in fields) {
+    subfolder <- file.path(folder,field)
+    if (!file.exists(subfolder)){
+      dir.create(subfolder)
+    }
+
+    file <- file.path(subfolder,paste0(field,".txt"))
+
+    if(field == "hourly") {
+      format_hourly_odv(data,file)
+    }
+
+    if(field == "surfsamp") {
+      format_surfsamp_odv(data,file)
+    }
+
+    if(field == "neuston") {
+      format_neuston_odv(data,file)
+    }
+
+  }
+
+
+}
+
+
+#' Format Hourly Data for ODV inport
 #'
 #' @param data
 #'
@@ -100,7 +150,7 @@ format_neuston_odv <- function(data,file,cruiseID = NULL) {
 #' @export
 #'
 #' @examples
-format_surface_odv <- function(data,file,cruiseID = NULL) {
+format_surfsamp_odv <- function(data,file,cruiseID = NULL) {
 
   # Try and determine the name of the cruise from the data input if not specified. If not, assign "unknown".
   if(is.null(cruiseID)) {
