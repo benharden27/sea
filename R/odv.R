@@ -48,6 +48,54 @@ format_odv <- function(data,folder,...) {
 }
 
 
+#' Format ADCP Data for ODV inport
+#'
+#' @param data
+#'
+#' @return
+#' @export
+#'
+#' @examples
+format_adcp_odv <- function(data,file,cruiseID = NULL) {
+
+  # Try and determine the name of the cruise from the data input if not specified. If not, assign "unknown".
+  if(is.null(cruiseID)) {
+    cruiseID <- deparse(substitute(data))
+    if(!stringr::str_detect(stringr::str_sub(cruiseID,1,1),"[C|S|c|s]")) {
+      cruiseID = "unknown"
+    }
+  }
+
+  # Convert from sea structure to get the adcp part
+  if(is_sea_struct(data)){
+    data <- data$adcp
+  }
+
+  odv_out <- tibble::tibble(
+    Cruise = cruiseID,
+    Station = unlist(purrr::map(1:dim(data$u)[1],rep,dim(data$u)[2])),
+    Type = "C",
+    `mon/day/yr` = data$dttm,
+    `Lon (∞E)` = data$lon,
+    `Lat (∞N)` = data$lat,
+    `Bot. Depth [m]` = " ",
+    `Depth [m]` = rep(data$d,dim(data$u)[1]),
+    `Echo Amplitude [counts]` = 0,
+    `East Component [mm/s]` = as.vector(data$u)/1000,
+    `North Component [mm/s]` = as.vector(data$v/1000),
+    `Magnitude [mm/s]` = as.vector(sqrt(data$u^2+data$v^2)/1000),
+    `Direction [deg]` = 0,
+    Ensemble = 0,
+    `hh:mm` =  00:00
+  )
+
+  readr::write_tsv(odv_out,file)
+
+  return(odv_out)
+
+}
+
+
 #' Format Hourly Data for ODV inport
 #'
 #' @param data
