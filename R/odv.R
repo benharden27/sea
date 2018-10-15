@@ -42,6 +42,10 @@ format_odv <- function(data,folder,...) {
       format_neuston_odv(data,file)
     }
 
+    if(field == "adcp") {
+      format_adcp_odv(data,file)
+    }
+
   }
 
 
