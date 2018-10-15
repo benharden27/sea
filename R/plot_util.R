@@ -217,6 +217,26 @@ wswd_to_uv <- function(ws,wd) {
 }
 
 
+#' U and V to wind speed and wind direction
+#'
+#' @param u
+#' @param v
+#'
+#' @return
+#' @export
+#'
+#' @examples
+uv_to_wswd <- function(u,v) {
+
+  ws <- sqrt(u^2+v^2)
+  wd <- 90 - atan2(v,u)*180/pi
+  wd[wd<0] <- wd[wd<0] + 360
+
+  out <- tibble::tibble(ws = ws, wd = wd)
+
+  return(out)
+}
+
 #' Turns vectors into lon and lat moved
 #'
 #' @param lon
