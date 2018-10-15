@@ -71,22 +71,25 @@ format_adcp_odv <- function(data,file,cruiseID = NULL) {
     data <- data$adcp
   }
 
+  nc <- dim(data$u)[2]
+  spdir <- uv_to_wswd(data$u,data$v)
+
   odv_out <- tibble::tibble(
     Cruise = cruiseID,
-    Station = unlist(purrr::map(1:dim(data$u)[1],rep,dim(data$u)[2])),
+    Station = rep_each(1:dim(data$u)[1], nc),
     Type = "C",
-    `mon/day/yr` = data$dttm,
-    `Lon (∞E)` = data$lon,
-    `Lat (∞N)` = data$lat,
+    `mon/day/yr` = rep_each(format(data$dttm,"%m/%d/%Y"), nc),
+    `Lon (∞E)` = rep_each(data$lon, nc),
+    `Lat (∞N)` = rep_each(data$lat, nc),
     `Bot. Depth [m]` = " ",
-    `Depth [m]` = rep(data$d,dim(data$u)[1]),
-    `Echo Amplitude [counts]` = 0,
-    `East Component [mm/s]` = as.vector(data$u)/1000,
-    `North Component [mm/s]` = as.vector(data$v/1000),
-    `Magnitude [mm/s]` = as.vector(sqrt(data$u^2+data$v^2)/1000),
-    `Direction [deg]` = 0,
+    `Depth [m]` = rep(data$d, dim(data$u)[1]),
+    `Echo Amplitude [counts]` = as.vector(t(data$backscat)),
+    `East Component [mm/s]` = as.vector(t(data$u)) * 1000,
+    `North Component [mm/s]` = as.vector(t(data$v)) * 1000,
+    `Magnitude [mm/s]` = as.vector(t(spdir[[1]])) * 1000,
+    `Direction [deg]` = as.vector(t(spdir[[2]])),
     Ensemble = 0,
-    `hh:mm` =  00:00
+    `hh:mm` = rep_each(format(data$dttm,"%H:%M"), nc)
   )
 
   readr::write_tsv(odv_out,file)
