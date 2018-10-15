@@ -179,14 +179,17 @@ read_adcp_ens_fold <- function(adcp_fold) {
                                     d,
                                     u,
                                     adcp_add$dttm,
-                                    dvec)$z
+                                    dvec,
+                                    duplicate = "strip")$z
+
         v <- as.vector(adcp_add$v)
         v <- v[isna]
         adcp_add$v <- akima::interp(dttm,
                                     d,
                                     v,
                                     adcp_add$dttm,
-                                    dvec)$z
+                                    dvec,
+                                    duplicate = "strip")$z
         adcp_add$d <- dvec
       }
       adcp$u <- rbind(adcp$u,adcp_add$u)
