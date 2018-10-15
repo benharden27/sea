@@ -139,11 +139,16 @@ read_adcp_ens <- function(adcp_file) {
 
   lat <- rowMeans(cbind(adcp@data$firstLatitude,adcp@data$lastLatitude))
   lon <- rowMeans(cbind(adcp@data$firstLongitude,adcp@data$lastLongitude))
-  dttm <- rowMeans(cbind(adcp@data$firstTime,adcp@data$lastTime))
+  dttm <- as.POSIXct(rowMeans(cbind(adcp@data$firstTime,adcp@data$lastTime)),origin = "1970-01-01")
   d <- adcp@data$distance
 
+  backscat <- rowMeans(adcp[["a","numeric"]],dims=2)
+  quality <- rowMeans(adcp[["q","numeric"]],dims=2)
+  percent <- adcp[["g","numeric"]][ , , 4]
+
   adcp <- list(lon = lon, lat = lat, dttm = dttm, d = d,
-               u = adcp@data$v[ , , 1], v = adcp@data$v[ , , 2])
+               u = adcp@data$v[ , , 1], v = adcp@data$v[ , , 2],
+               backscat = backscat, quality = quality, percent = percent)
 }
 
 
