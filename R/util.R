@@ -20,6 +20,19 @@ find_near <- function(vec,vals) {
 }
 
 
+#' Repeat each element of a vector a set amount of times
+#'
+#' @param x
+#' @param times
+#'
+#' @return
+#' @export
+#'
+#' @examples
+rep_each <- function(x,times) {
+  unlist(purrr::map(x,rep,times))
+}
+
 #' Check if variable exists in data frame
 #'
 #' Assigns the variable to "val" if found, otherwise stops with error
