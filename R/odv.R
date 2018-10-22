@@ -20,7 +20,7 @@ format_odv <- function(data,folder,...) {
   }
 
   # select the fields
-  fields <- c("hourly","surfsamp","neuston")
+  fields <- c("hourly","surfsamp","neuston","adcp")
 
   for (field in fields) {
     subfolder <- file.path(folder,field)
@@ -101,6 +101,8 @@ format_adcp_odv <- function(data,file,cruiseID = NULL) {
   return(odv_out)
 
 }
+
+
 
 
 #' Format Hourly Data for ODV inport
