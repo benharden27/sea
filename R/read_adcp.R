@@ -129,6 +129,7 @@ read_adcp_ens <- function(adcp_file) {
     dblank = 25
     br <- rowMeans(adcp@data$br,na.rm = T) - dblank
     iblank <- sea::find_near(adcp@data$distance,br)
+    iblank[is.na(iblank)] <- 1
     nd <- length(adcp@data$distance)
     for (i in 1:length(iblank)) {
       adcp@data$v[i,iblank[i]:nd,1] <- NA
