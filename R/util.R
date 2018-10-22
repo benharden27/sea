@@ -12,7 +12,11 @@ find_near <- function(vec,vals) {
 
   locs <- rep(NA,length(vals))
   for (i in 1:length(vals)) {
-    locs[i] <- which.min(abs(vec-vals[i]))
+    if(!is.na(vals[i])) {
+      locs[i] <- which.min(abs(vec-vals[i]))
+    } else {
+      locs[i] <- NA
+    }
   }
 
   return(locs)
