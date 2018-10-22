@@ -141,15 +141,15 @@ read_neuston <- function(filein) {
                           "sarg_nviii_mass_clump","s.*natan.*.viii.*.mass.*.clump",readr::parse_double,
                           "sarg_nviii_piece_frag","s.*natan.*.viii.*.frag",readr::parse_double,
                           "sarg_nviii_mass_frag","s.*natan.*.viii.*.mass.*.frag",readr::parse_double,
-                          "sarg_fiii_piece_tot","s.*flui.*.iii.*.total.*.pieces",readr::parse_double,
-                          "sarg_fiii_mass_tot","s.*flui.*.iii.*.total.*.mass",readr::parse_double,
-                          "sarg_fiii_piece_clump","s.*flui.*.iii.*.clump",readr::parse_double,
-                          "sarg_fiii_mass_clump","s.*flui.*.iii.*.mass.*.clump",readr::parse_double,
-                          "sarg_fiii_piece_frag","s.*flui.*.iii.*.frag",readr::parse_double,
-                          "sarg_fiii_mass_frag","s.*flui.*iii.*mass.*.frag",readr::parse_double,
+                          "sarg_fiii_piece_tot","s.*flui.*.total.*.pieces",readr::parse_double,
+                          "sarg_fiii_mass_tot","s.*flui.*.total.*.mass",readr::parse_double,
+                          "sarg_fiii_piece_clump","s.*flui.*.clump",readr::parse_double,
+                          "sarg_fiii_mass_clump","s.*flui.*.mass.*.clump",readr::parse_double,
+                          "sarg_fiii_piece_frag","s.*flui.*.frag",readr::parse_double,
+                          "sarg_fiii_mass_frag","s.*flui.*mass.*.frag",readr::parse_double,
                           "sarg_other_piece_tot","other.*sar.*.total.*.pieces",readr::parse_double,
                           "sarg_other_mass_tot","other.*sar.*.total.*.mass",readr::parse_double,
-                          "sarg_other_piece_clump","other.*sar.*.iii.*.clump",readr::parse_double,
+                          "sarg_other_piece_clump","other.*sar.*.clump",readr::parse_double,
                           "sarg_other_mass_clump","other.*sar.*.mass.*.clump",readr::parse_double,
                           "sarg_other_piece_frag","other.*sar.*.frag",readr::parse_double,
                           "sarg_other_mass_frag","other.*sar.*mass.*.frag",readr::parse_double,
@@ -157,7 +157,9 @@ read_neuston <- function(filein) {
                           "sarg_piece_tot","s.*.total.*.comb.*.total.*piece",readr::parse_double,
                           "plas_pieces","^plastic.*pieces",readr::parse_integer,
                           "plas_pellets","^plastic.*pellet",readr::parse_integer,
-                          "tar","^tar",readr::parse_integer
+                          "plas_density","^plastic.*density.*.km2",readr::parse_double,
+                          "tar","^tar",readr::parse_integer,
+                          "tow_desc","tow.*description",readr::parse_character
                           )
   args_in <- tibble::as_tibble(list(df=list(df),regex=args$regex,parse_fun=args$parse_fun))
   namelist <- purrr::as_vector(dplyr::select(args,name))
