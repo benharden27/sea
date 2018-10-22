@@ -24,10 +24,13 @@ read_ctd <- function(cnv_file, pmin = 5, p = 1, ...) {
   ctd <- oce::read.ctd(cnv_file, ...)
 
   # Trim CTD data to remove upcast and surface values
-  ctd <- oce::ctdTrim(ctd, parameters = list(pmin = pmin), ...)
+  ctd_trim <- oce::ctdTrim(ctd, parameters = list(pmin = pmin), ...)
+  if(length(ctd_trim@data$temperature)==0) {
+    ctd_trim <- oce::ctdTrim(ctd, parameters = list(pmin = pmin), method = "upcast")
+  }
 
   # Bin the CTD data into consistent pressure bins
-  ctd <- oce::ctdDecimate(ctd, p = 1, ...)
+  ctd <- oce::ctdDecimate(ctd_trim, p = 1, ...)
 
 # Extract metadata --------------------------------------------------------
 
