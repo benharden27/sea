@@ -110,8 +110,8 @@ read_elg <- function(filein,forceGPS=NULL,preCheck = T,skip=0) {
                         second=lubridate::second(df$sys_time))
 
   # Make datetimes from GPS using the system datetime
-  df <- dplyr::mutate(df,lab_dttm = sea::create_gps_dttm(df$lab_time,df$sys_dttm))
-  df <- dplyr::mutate(df,nav_dttm = sea::create_gps_dttm(df$nav_time,df$sys_dttm))
+  df <- dplyr::mutate(df,lab_dttm = create_gps_dttm(lab_time,sys_dttm))
+  df <- dplyr::mutate(df,nav_dttm = create_gps_dttm(nav_time,sys_dttm))
 
   # choose master datetime
   # use nav GPS as the default and revert to lab gps and sys time as required
@@ -229,7 +229,7 @@ clean_bad_elg <- function(filein,latstr="[0-9]{4}\\.[0-9]{4}[NS]{1}",lonstr="[0-
 create_gps_dttm <- function(gps_time,sys_dttm) {
   if(length(which(is.na(gps_time))) < length(gps_time) &
      length(which(!is.na(gps_time))) > 100) {
-    sys_time <- readr::parse_time(format(df$sys_dttm,"%H:%M:%S"))
+    sys_time <- readr::parse_time(format(sys_dttm,"%H:%M:%S"))
     difft <- gps_time - sys_time
     goodi <- !is.na(difft)
     dayoffi <- difft < -8000
