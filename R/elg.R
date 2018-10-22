@@ -56,14 +56,14 @@ read_elg <- function(filein,forceGPS=NULL,preCheck = T,skip=0) {
                           "sys_date","date",lubridate::mdy,
                           "sys_time","^time",readr::parse_time,
                           "nav_time","gps.*nav.*time",readr::parse_character,
-                          "nav_lon","gps.*nav.*lon",parse_lon,
-                          "nav_lat","gps.*nav.*lat",parse_lat,
+                          "nav_lon","gps.*nav.*lon",sea::parse_lon,
+                          "nav_lat","gps.*nav.*lat",sea::parse_lat,
                           "nav_sog","gps.*nav.*sog",readr::parse_double,
                           "nav_cog","gps.*nav.*cog",readr::parse_double,
                           "nav_quality","gps.*nav.*quality",readr::parse_integer,
                           "lab_time","gps.*lab.*time",readr::parse_character,
-                          "lab_lon","gps.*lab.*lon",parse_lon,
-                          "lab_lat","gps.*lab.*lat",parse_lat,
+                          "lab_lon","gps.*lab.*lon",sea::parse_lon,
+                          "lab_lat","gps.*lab.*lat",sea::parse_lat,
                           "lab_sog","gps.*lab.*sog",readr::parse_double,
                           "lab_cog","gps.*lab.*cog",readr::parse_double,
                           "lab_quality","gps.*lab.*quality",readr::parse_integer,
@@ -97,7 +97,7 @@ read_elg <- function(filein,forceGPS=NULL,preCheck = T,skip=0) {
   # Work out how to pass format arguments or just post-process afterward
 
   # output <- purrr::pmap(dplyr::select(args,df,regex,parse_fun),parse_field)
-  output <- purrr::pmap(args_in,parse_field)
+  output <- purrr::pmap(args_in,sea::parse_field)
 
   names(output) <- namelist
   df <- tibble::as.tibble(output)
@@ -110,37 +110,8 @@ read_elg <- function(filein,forceGPS=NULL,preCheck = T,skip=0) {
                         second=lubridate::second(df$sys_time))
 
   # Make datetimes from GPS using the system datetime
-  # TODO: functionize the following
-  if(length(which(is.na(df$lab_time))) < length(df$lab_time)) {
-    difft <- df$lab_time - df$sys_time
-    goodi <- !is.na(difft)
-    dayoffi <- difft < -8000
-    k <- ceiling(as.numeric(max(difft[abs(difft)<2*60*60],na.rm=T)/20))
-    if(!k%%2) {
-      k <- k+1
-    }
-    rmdifft <- runmed(difft,k)
-    difft[dayoffi & goodi] <- rmdifft[dayoffi & goodi]
-    df <- dplyr::mutate(df,lab_dttm = sys_dttm+difft)
-  } else {
-    df <- dplyr::mutate(df,lab_dttm = readr::parse_datetime(rep(NA,nrow(df))))
-  }
-
-  # largely repeated from above, but for NAV GPS
-  if(length(which(is.na(df$nav_time))) < length(df$nav_time)) {
-    difft <- df$nav_time - df$sys_time
-    goodi <- !is.na(difft)
-    dayoffi <- difft < -8000
-    k <- ceiling(as.numeric(max(difft[abs(difft)<2*60*60],na.rm=T)/20))
-    if(!k%%2) {
-      k <- k+1
-    }
-    rmdifft <- runmed(difft,k)
-    difft[dayoffi & goodi] <- rmdifft[dayoffi & goodi]
-    df <- dplyr::mutate(df,nav_dttm = sys_dttm+difft)
-  } else {
-    df <- dplyr::mutate(df,nav_dttm = readr::parse_datetime(rep(NA,nrow(df))))
-  }
+  df <- dplyr::mutate(df,lab_dttm = sea::create_gps_dttm(df$lab_time,df$sys_dttm))
+  df <- dplyr::mutate(df,nav_dttm = sea::create_gps_dttm(df$nav_time,df$sys_dttm))
 
   # choose master datetime
   # use nav GPS as the default and revert to lab gps and sys time as required
@@ -243,6 +214,34 @@ clean_bad_elg <- function(filein,latstr="[0-9]{4}\\.[0-9]{4}[NS]{1}",lonstr="[0-
 }
 
 
+#' Create a GPS DateTime field
+#'
+#' ELG files typically have a GPS time, but no GPS data.
+#' This function takes the system datetime field already parsed and returns a well formated GPS datetime.
+#'
+#' @param gps_time Raw GPS time field
+#' @param sys_dttm system datetime
+#'
+#' @return
+#' @export
+#'
+#' @examples
+create_gps_dttm <- function(gps_time,sys_dttm) {
+  if(length(which(is.na(gps_time))) < length(gps_time) &
+     length(which(!is.na(gps_time))) > 100) {
+    sys_time <- readr::parse_time(format(df$sys_dttm,"%H:%M:%S"))
+    difft <- gps_time - sys_time
+    goodi <- !is.na(difft)
+    dayoffi <- difft < -8000
+    x <- 1:length(difft)
+    lf <- lsfit(x[goodi & !dayoffi],difft[goodi & !dayoffi])
+    difft <- x*lf[[1]][2] + lf[[1]][1]
+    gps_dttm = sys_dttm+difft
+  } else {
+    gps_dttm = readr::parse_datetime(rep(NA,length(gps_time)))
+  }
+  return(gps_dttm)
+}
 
 
 
