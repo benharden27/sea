@@ -134,7 +134,8 @@ plot_bubble <- function(df,var, ran_val = NULL, ran_qua = c(0,1), base_map = NUL
 
   base_map +
     ggplot2::geom_point(ggplot2::aes(x=lon,y=lat,size=val),data=df,pch=21,fill='white') +
-    ggplot2::labs(color=var)
+    ggplot2::labs(color=var) +
+    ggplot2::scale_radius(name = "")
 
 }
 
