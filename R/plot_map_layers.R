@@ -141,7 +141,7 @@ make_base_map <- function(df = NULL, lonlim = NULL, latlim = NULL,
 #' @export
 #'
 #' @examples
-make_track <- function(df,data_source = "elg") {
+make_track <- function(df,data_source = "elg", color = "black") {
 
   # select the data source from sea structure
   if(is_sea_struct(df))
@@ -154,7 +154,7 @@ make_track <- function(df,data_source = "elg") {
     df <- as.data.frame(head(df,2))
 
   # return a geom_path object from the lon and lat data
-  out <- ggplot2::geom_path(ggplot2::aes(lon,lat),data=df)
+  out <- ggplot2::geom_path(ggplot2::aes(lon,lat),data=df, color = color)
 
 }
 
@@ -173,7 +173,7 @@ make_track <- function(df,data_source = "elg") {
 #'
 #' @examples
 make_points <- function(df, var = "temp", data_source = "elg", step = 1, size = 2,
-                      ran_val = NULL, ran_qua = c(0.01,0.99)) {
+                      ran_val = NULL, ran_qua = c(0.01,0.99), type = "point") {
 
   # select the data source from sea structure
   if(is_sea_struct(df))
@@ -205,7 +205,17 @@ make_points <- function(df, var = "temp", data_source = "elg", step = 1, size = 
   ran <- seq(1,nrow(df),step)
 
   # return a geom_points structure from data
-  out <- ggplot2::geom_point(ggplot2::aes(x = lon, y = lat, color = val), data=df[ran, ], size = size)
+  if(type == "point") {
+    out <- ggplot2::geom_point(ggplot2::aes(x = lon, y = lat, color = val),
+                               data = df[ran, ], size = size)
+  } else if (type == "bubble") {
+    out <- ggplot2::geom_point(ggplot2::aes(x = lon, y = lat, size = val),
+                               data = df[ran, ], pch=21, fill="white")
+      # ggplot2::labs(color=var) +
+      # ggplot2::scale_radius(name = "")
+  } else {
+    stop(paste("Unknown plotting type:",type))
+  }
 
 
 }
@@ -251,10 +261,10 @@ make_vectors <- function(df, data_source = "elg", step = 60, scale = 1) {
   # set up th range of values to be potted
   ran <- seq(1,nrow(df),step)
 
-  # TODO add arrows to end of line rather than dots
+  #
   out <- ggplot2::geom_segment(ggplot2::aes(x = lon, y = lat, xend = lone, yend = late),
                                data = df[ran, ], color = "red",
-                               arrow = ggplot2::arrow(length=ggplot2::unit(0.1,"inches"),
+                               arrow = ggplot2::arrow(length=ggplot2::unit(0.05,"inches"),
                                                       type = "closed"))
 
 }

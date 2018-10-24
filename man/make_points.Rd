@@ -5,7 +5,7 @@
 \title{Generic generator of geom_points from data}
 \usage{
 make_points(df, var = "temp", data_source = "elg", step = 1, size = 2,
-  ran_val = NULL, ran_qua = c(0.01, 0.99))
+  ran_val = NULL, ran_qua = c(0.01, 0.99), type = "point")
 }
 \arguments{
 \item{colormap}{}

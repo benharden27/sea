@@ -6,7 +6,8 @@
 \usage{
 plot_flowthru(df, var = "temp", data_source = "elg", step = NULL,
   colormap = oce::oce.colorsTemperature(), ran_val = NULL,
-  ran_qua = c(0.01, 0.99), title = stringr::str_to_title(var), ...)
+  ran_qua = c(0.01, 0.99), title = stringr::str_to_title(var),
+  type = "point", ...)
 }
 \arguments{
 \item{...}{}

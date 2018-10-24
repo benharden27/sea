@@ -31,7 +31,7 @@ plot_track <- function(df,data_source = "elg", ...) {
 plot_flowthru <- function(df, var="temp", data_source = "elg", step = NULL,
                           colormap = oce::oce.colorsTemperature(),
                           ran_val = NULL, ran_qua = c(0.01,0.99),
-                          title = stringr::str_to_title(var), ...) {
+                          title = stringr::str_to_title(var), type = "point", ...) {
 
   if(is.null(step)) {
     if(data_source == 'elg') {
@@ -43,8 +43,47 @@ plot_flowthru <- function(df, var="temp", data_source = "elg", step = NULL,
 
   make_base_map(df,title = title, ...) +
     make_points(df,data_source = data_source, var = var,
-              step = step, ran_val = ran_val, ran_qua = ran_qua) +
+              step = step, ran_val = ran_val, ran_qua = ran_qua, type = type) +
     ggplot2::scale_color_gradientn(name = "", colors = colormap(100))
+
+}
+
+#' Plot a neuston tow dataset on a map
+#'
+#' @param df
+#' @param var
+#' @param data_source
+#' @param step
+#' @param colormap
+#' @param ran_val
+#' @param ran_qua
+#' @param title
+#' @param type
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot_neuston <- function(df, var="biomass", data_source = "neuston", step = 1,
+                         colormap = oce::oce.colorsTemperature(),
+                         ran_val = NULL, ran_qua = c(0,1),
+                         title = stringr::str_to_title(var), type = "bubble",...) {
+
+  if(is_sea_struct(df)) {
+    df1 <- select_data(df,data_source)
+    make_base_map(df,title = title, ...) +
+      make_track(df, color = "grey") +
+      make_points(df1,var = var,data_source = data_source,
+                  ran_qua = ran_qua, type = type)
+  } else {
+    plot_flowthru(df,var = var,data_source = data_source,
+                  colormap = colormap, title = title,
+                  ran_qua = ran_qua, type = type)
+
+  }
+
+
 
 }
 

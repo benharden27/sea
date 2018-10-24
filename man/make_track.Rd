@@ -4,7 +4,7 @@
 \alias{make_track}
 \title{Make a cruise track ggplot geom}
 \usage{
-make_track(df, data_source = "elg")
+make_track(df, data_source = "elg", color = "black")
 }
 \arguments{
 \item{data_source}{}
