@@ -5,7 +5,7 @@
 \title{Find maximum tension for wire files in a folder}
 \usage{
 max_tension(data_folder, cruiseID = NULL, width = 8, thresh = 100,
-  plotFL = TRUE)
+  plotFL = TRUE, check = TRUE)
 }
 \arguments{
 \item{data_folder}{the folder where the tension files are kept}

@@ -6,7 +6,9 @@
 #' @export
 #'
 #' @examples
-max_tension <- function(data_folder, cruiseID = NULL, width = 8, thresh = 100, plotFL = TRUE) {
+max_tension <- function(data_folder, cruiseID = NULL,
+                        width = 8, thresh = 100,
+                        plotFL = TRUE, check = TRUE) {
 
   # Create list of files to cycle through
   files <- list.files(data_folder,"^[CS]{1}[0-9]{3}")
@@ -28,31 +30,49 @@ max_tension <- function(data_folder, cruiseID = NULL, width = 8, thresh = 100, p
       dir.create(plot_out)
   }
 
-  # cycle through data files, find max tension and plot
-  max_tension <- tibble::tibble(cast = files, max_tension = NA)
-  for (i in 1:length(files)) {
+  # name output file
+  file_out <- paste0(cruiseID, "_maxtension.csv")
 
-    # read and process data
-    file <- file.path(data_folder,files[i])
-    data <- readr::read_csv(file, col_names = F, col_types = readr::cols(.default = readr::col_double()),skip = 10)
-    data$X3 <- oce::despike(data$X3)
-    datasm <- runmed(data$X3, 121, endrule = "constant")
-    tr <- range(which(datasm > thresh), na.rm = T)
-    tr <- round(tr + c(1,-1)*diff(tr)/width)
-    max_tension$max_tension[i] = max(data$X3[tr[1]:tr[2]],na.rm = T)
-    max_t_i <- tr[1] - 1 + which.max(data$X3[tr[1]:tr[2]])
-
-    # plot data if required
-    if(plotFL) {
-      ggplot2::qplot(1:nrow(data),data$X3) +
-      ggplot2::geom_point(ggplot2::aes(max_t_i, max_tension$max_tension[i]),
-                          color = "red", size = 5) +
-      ggplot2::ylab("Wire Tension") +
-      ggplot2::xlab("Index")
-      ggplot2::ggsave(file.path(plot_out, paste0(files[i], ".png")))
-    }
+  # check if file has already been processed
+  if (check == TRUE & file.exists(file.path(process_out,file_out))) {
+    max_tension <- readr::read_csv(file.path(process_out,file_out),
+                                   col_types = "cd")
+    files <- setdiff(files,max_tension$cast)
   }
 
-  readr::write_csv(max_tension, file.path(process_out, paste0(cruiseID, "_maxtension.csv")))
+  if(length(files)>0) {
+    # cycle through data files, find max tension and plot
+    max_tension2 <- tibble::tibble(cast = files, max_tension = NA)
+    for (i in 1:length(files)) {
+
+      # read and process data
+      file <- file.path(data_folder,files[i])
+      data <- readr::read_csv(file, col_names = F, col_types = readr::cols(.default = readr::col_double()), skip = 10)
+      data$X3 <- oce::despike(data$X3)
+      datasm <- runmed(data$X3, 121, endrule = "constant")
+      tr <- range(which(datasm > thresh), na.rm = T)
+      tr <- round(tr + c(1,-1)*diff(tr)/width)
+      max_tension2$max_tension[i] = max(data$X3[tr[1]:tr[2]],na.rm = T)
+      max_t_i <- tr[1] - 1 + which.max(data$X3[tr[1]:tr[2]])
+
+      # plot data if required
+      if(plotFL) {
+        ggplot2::qplot(1:nrow(data),data$X3) +
+        ggplot2::geom_point(ggplot2::aes(max_t_i, max_tension2$max_tension[i]),
+                            color = "red", size = 5) +
+        ggplot2::ylab("Wire Tension") +
+        ggplot2::xlab("Index")
+        ggplot2::ggsave(file.path(plot_out, paste0(files[i], ".png")))
+      }
+    }
+
+    if(check == TRUE & file.exists(file.path(process_out,file_out))) {
+      max_tension <- rbind(max_tension,max_tension2)
+    } else {
+      max_tension <- max_tension2
+    }
+
+    readr::write_csv(max_tension, file.path(process_out,file_out))
+  }
 
 }
