@@ -1,3 +1,23 @@
+#' Get a matrix of a paricular variable from a list of oce ctd objects
+#'
+#' @param ctd
+#' @param var
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_ctd_var <- function(ctd,var="temperature") {
+  s <- make_section(ctd)
+  s <- oce::sectionGrid(s)
+  p <- unique(s[['pressure']])
+  v <- array(NA, dim = c(length(ctd), length(p)))
+  for (i in 1:length(ctd)) {
+    v[i, ] <- s[['station']][[i]][[var]]
+  }
+
+}
+
 
 #' Find index of nearest value in vector
 #'
