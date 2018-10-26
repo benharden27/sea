@@ -4,7 +4,7 @@
 \alias{read_adcp_ens_fold}
 \title{Read all ADCP Ensemble files in a folder and combine}
 \usage{
-read_adcp_ens_fold(adcp_fold)
+read_adcp_ens_fold(adcp_fold, combine = TRUE)
 }
 \arguments{
 \item{adcp_fold}{}

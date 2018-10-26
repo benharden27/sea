@@ -161,49 +161,99 @@ read_adcp_ens <- function(adcp_file) {
 #' @export
 #'
 #' @examples
-read_adcp_ens_fold <- function(adcp_fold) {
+read_adcp_ens_fold <- function(adcp_fold, combine = TRUE) {
 
   files <- list.files(adcp_fold,".LTA")
 
+  adcp_in = NULL
   for (i in 1:length(files)) {
-
     file <- file.path(adcp_fold,files[i])
-    adcp_add <- read_adcp_ens(file)
-    if (i == 1) {
-      adcp <- adcp_add
-      dvec <- adcp$d
-    } else {
-      if(!sum(adcp_add$d==dvec) == length(dvec)) {
-        u <- as.vector(adcp_add$u)
-        dttm <- rep(adcp_add$dttm,ncol(adcp_add$u))
-        d <- unlist(purrr::map(adcp_add$d,rep,nrow(adcp_add$u)))
-        isna <- !is.na(u)
-        u <- u[isna]
-        dttm <- dttm[isna]
-        d <- d[isna]
-        adcp_add$u <- akima::interp(dttm,
-                                    d,
-                                    u,
-                                    adcp_add$dttm,
-                                    dvec,
-                                    duplicate = "strip")$z
-
-        v <- as.vector(adcp_add$v)
-        v <- v[isna]
-        adcp_add$v <- akima::interp(dttm,
-                                    d,
-                                    v,
-                                    adcp_add$dttm,
-                                    dvec,
-                                    duplicate = "strip")$z
-        adcp_add$d <- dvec
-      }
-      adcp$u <- rbind(adcp$u,adcp_add$u)
-      adcp$v <- rbind(adcp$v,adcp_add$v)
-      adcp$lon <- append(adcp$lon,adcp_add$lon)
-      adcp$lat <- append(adcp$lat,adcp_add$lat)
-      adcp$dttm <- append(adcp$dttm,adcp_add$dttm)
-    }
+    adcp_in[[i]] <- read_adcp_ens(file)
   }
-  return(adcp)
+
+  if(combine) {
+    # find the longest depth vector in the adcp options and assign to dvec
+    maxd <- rep(NA,length(adcp_in))
+    for (i in 1:length(adcp_in)) {
+      maxd[i] <- length(adcp_in[[i]]$d)
+    }
+    ii <- which.max(maxd)
+    dvec <- adcp_in[[ii]]$d
+
+    # loop through adcp objects, interpolate and combine
+    for (i in 1:length(adcp_in)) {
+
+      if (i == 1) {
+        if(i == ii) {
+          adcp_out <- adcp_in[[i]]
+        } else {
+          adcp_out <- interp_adcp(adcp_in[[i]],dvec)
+        }
+
+      } else {
+
+        if(i == ii) {
+          adcp_add <- adcp_in[[i]]
+        } else {
+          adcp_add <- interp_adcp(adcp_in[[i]],dvec)
+        }
+
+        adcp_out$u <- rbind(adcp_out$u,adcp_add$u)
+        adcp_out$v <- rbind(adcp_out$v,adcp_add$v)
+        adcp_out$backscat <- rbind(adcp_out$backscat,adcp_add$backscat)
+        adcp_out$quality <- rbind(adcp_out$quality,adcp_add$quality)
+        adcp_out$percent <- rbind(adcp_out$percent,adcp_add$percent)
+        adcp_out$lon <- append(adcp_out$lon,adcp_add$lon)
+        adcp_out$lat <- append(adcp_out$lat,adcp_add$lat)
+        adcp_out$dttm <- append(adcp_out$dttm,adcp_add$dttm)
+      }
+    }
+    return(adcp_out)
+  } else {
+    return(adcp_in)
+  }
+}
+
+
+#' Interpolate an adcp field to different depths
+#'
+#' @param adcp
+#' @param dvec
+#' @param vars
+#'
+#' @return
+#' @export
+#'
+#' @examples
+interp_adcp <- function(adcp,dvec,vars = c("u","v","backscat","quality","percent")) {
+
+  # Create empty output object
+  output <- NULL
+
+  for (var in vars) {
+    out <- array(NA,c(dim(adcp[[var]])[1],length(dvec)))
+    for (i in 1:dim(adcp[[var]])[1]) {
+      goodi <- !is.na(adcp[[var]][i,])
+      if(sum(goodi)<2) {
+        next
+      } else {
+        if(abs(min(adcp$d[goodi])-min(dvec))<10) {
+          rule = 2:1
+        } else {
+          rule <- 1
+        }
+        out[i, ] <- approx(adcp$d[goodi],adcp[[var]][i,goodi],dvec,rule=rule)$y
+      }
+    }
+    output[[var]] <- out
+  }
+
+  output[["lon"]] <- adcp[["lon"]]
+  output[["lat"]] <- adcp[["lat"]]
+  output[["dttm"]] <- adcp[["dttm"]]
+  output[["d"]] <- dvec
+
+  return(output)
+
+
 }
