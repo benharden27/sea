@@ -20,7 +20,7 @@ format_odv <- function(data,folder,...) {
   }
 
   # select the fields
-  fields <- c("hourly","surfsamp","neuston","adcp")
+  fields <- c("hourly","surfsamp","neuston","adcp","ctd")
 
   for (field in fields) {
     subfolder <- file.path(folder,field)
@@ -44,6 +44,10 @@ format_odv <- function(data,folder,...) {
 
     if(field == "adcp") {
       format_adcp_odv(data,file)
+    }
+
+    if(field == "ctd") {
+      format_ctd_odv(data,file)
     }
 
   }
@@ -87,7 +91,7 @@ format_adcp_odv <- function(data,file,cruiseID = NULL) {
     `Lat (∞N)` = rep_each(data$lat, nc),
     `Bot. Depth [m]` = " ",
     `Depth [m]` = rep(data$d, dim(data$u)[1]),
-    `Echo Amplitude [counts]` = as.vector(t(data$backscat)),
+    # `Echo Amplitude [counts]` = as.vector(t(data$backscat)),
     `East Component [mm/s]` = as.vector(t(data$u)) * 1000,
     `North Component [mm/s]` = as.vector(t(data$v)) * 1000,
     `Magnitude [mm/s]` = as.vector(t(spdir[[1]])) * 1000,
@@ -111,46 +115,53 @@ format_adcp_odv <- function(data,file,cruiseID = NULL) {
 #' @export
 #'
 #' @examples
-# format_ctd_odv <- function(data,file,cruiseID = NULL) {
-#
-#   # Try and determine the name of the cruise from the data input if not specified. If not, assign "unknown".
-#   if(is.null(cruiseID)) {
-#     cruiseID <- deparse(substitute(data))
-#     if(!stringr::str_detect(stringr::str_sub(cruiseID,1,1),"[C|S|c|s]")) {
-#       cruiseID = "unknown"
-#     }
-#   }
-#
-#   # Convert from sea structure to get the adcp part
-#   if(is_sea_struct(data)){
-#     data <- data$ctd
-#   }
-#
-#   nc <- length(ctd)
-#
-#   odv_out <- tibble::tibble(
-#     Cruise = cruiseID,
-#     Station = rep_each(1:dim(data$u)[1], nc),
-#     Type = "C",
-#     `mon/day/yr` = rep_each(format(data$dttm,"%m/%d/%Y"), nc),
-#     `Lon (∞E)` = rep_each(data$lon, nc),
-#     `Lat (∞N)` = rep_each(data$lat, nc),
-#     `Bot. Depth [m]` = " ",
-#     `Depth [m]` = rep(data$d, dim(data$u)[1]),
-#     `Echo Amplitude [counts]` = as.vector(t(data$backscat)),
-#     `East Component [mm/s]` = as.vector(t(data$u)) * 1000,
-#     `North Component [mm/s]` = as.vector(t(data$v)) * 1000,
-#     `Magnitude [mm/s]` = as.vector(t(spdir[[1]])) * 1000,
-#     `Direction [deg]` = as.vector(t(spdir[[2]])),
-#     Ensemble = 0,
-#     `hh:mm` = rep_each(format(data$dttm,"%H:%M"), nc)
-#   )
-#
-#   readr::write_tsv(odv_out,file)
-#
-#   return(odv_out)
-#
-# }
+format_ctd_odv <- function(data,file,cruiseID = NULL) {
+
+  # Try and determine the name of the cruise from the data input if not specified. If not, assign "unknown".
+  if(is.null(cruiseID)) {
+    cruiseID <- deparse(substitute(data))
+    if(!stringr::str_detect(stringr::str_sub(cruiseID,1,1),"[C|S|c|s]")) {
+      cruiseID = "unknown"
+    }
+  }
+
+  # Convert from sea structure to get the adcp part
+  if(is_sea_struct(data)){
+    data <- data$ctd
+  }
+
+  s <- make_section(data)
+  s <- oce::sectionGrid(s)
+
+  p <- unique(s[['pressure']])
+  n <- length(data)
+
+  odv_out <- tibble::tibble(
+    Cruise = cruiseID,
+    Station = rep_each(get_ctd_meta(data,"station"),length(p)),
+    Type = "C",
+    `mon/day/yr` = rep_each(format(s[["time"]],"%m/%d/%Y"),length(p)),
+    `hh:mm` = rep_each(format(s[["time"]],"%H:%M"), length(p)),
+    `Lon (∞E)` = s[["longitude"]],
+    `Lat (∞N)` = s[["latitude"]],
+    `Bot. Depth [m]` = rep_each(get_ctd_meta(data,"waterDepth"),length(p)),
+    `Depth [m]` = s[["depth"]],
+    `Temperature [∞C]` = s[["temperature"]],
+    `Salinity [psu]` = s[["salinity"]],
+    `Density[sigma-theta,Kg/m^3]` = s[["sigmaTheta"]],
+    `Chl a Fluorescence [V]` = s[["fluorescence"]],
+    `Oxygen,SBE43[umol/Kg]` = s[["oxygen"]],
+    `CDOM Fluorescence [mg/m3]` = " ",
+    `PAR Irradience [uE/m2/s]` = s[["par"]],
+    `Transmittance [V]` = " ",
+    `Oxygen [mL/L]` = s[["oxygen2"]]
+  )
+
+  readr::write_tsv(odv_out,file)
+
+  return(odv_out)
+
+}
 
 
 #' Format Hourly Data for ODV inport

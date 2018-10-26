@@ -2,19 +2,13 @@
 % Please edit documentation in R/odv.R
 \name{format_hourly_odv}
 \alias{format_hourly_odv}
-\title{Format ADCP Data for ODV inport}
+\title{Format Hourly Data for ODV inport}
 \usage{
 format_hourly_odv(data, file, cruiseID = NULL)
 }
 \arguments{
 \item{data}{}
-
-\item{data}{}
 }
 \description{
-Format ADCP Data for ODV inport
-}
-\examples{
 Format Hourly Data for ODV inport
-
 }
