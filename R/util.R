@@ -15,8 +15,28 @@ get_ctd_var <- function(ctd,var="temperature") {
   for (i in 1:length(ctd)) {
     v[i, ] <- s[['station']][[i]][[var]]
   }
+  return(v)
 
 }
+
+#' Get a vector of a paricular metadata variable from a list of oce ctd objects
+#'
+#' @param ctd
+#' @param var
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_ctd_meta <- function(ctd,meta="station") {
+  v <- rep(NA, length(ctd))
+  for (i in 1:length(ctd)) {
+    v[i] <- ctd[[i]]@metadata[[meta]]
+  }
+  return(v)
+}
+
+
 
 
 #' Find index of nearest value in vector
