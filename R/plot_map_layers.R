@@ -263,8 +263,8 @@ make_vectors <- function(df, data_source = "elg", step = 60, scale = 1) {
 
   #
   out <- ggplot2::geom_segment(ggplot2::aes(x = lon, y = lat, xend = lone, yend = late),
-                               data = df[ran, ], color = "red",
-                               arrow = ggplot2::arrow(length=ggplot2::unit(0.05,"inches"),
+                               data = df[ran, ], color = "black",
+                               arrow = ggplot2::arrow(length=ggplot2::unit(0.025,"inches"),
                                                       type = "closed"))
 
 }

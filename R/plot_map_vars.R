@@ -117,7 +117,7 @@ plot_surf <- function(df, var = 'no3', ran_val = NULL, ran_qua = c(0,1), base_ma
 plot_wind <- function(df,data_source = "elg", step = 60, scale = 1,...) {
 
   make_base_map(df,...) +
-    make_track(df) +
+    make_track(df,color = "grey") +
     make_vectors(df, data_source = data_source, step = step, scale = scale)
 
 
@@ -135,7 +135,7 @@ plot_wind <- function(df,data_source = "elg", step = 60, scale = 1,...) {
 plot_current <- function(df, step = 1, scale = 0.005,...) {
 
   make_base_map(df,...) +
-    make_track(df, data_source = "adcp") +
+    make_track(df, color = "grey", data_source = "adcp") +
     make_vectors(df, data_source = "adcp", step = step, scale = scale)
 
 
