@@ -36,7 +36,11 @@ package_data <- function(root_folder,cruiseID=NULL,...) {
   # hourly work
   hourly_file <- find_datasheet(files,"Hourlywork")
   if (length(hourly_file) == 1) {
-    hourly <- read_hourly(file.path(root_folder,"SHIPDATA",hourly_file))
+    hourly <- try(read_hourly(file.path(root_folder,"SHIPDATA",hourly_file)))
+    if(inherits(hourly,"try-error")) {
+      warning("Hourly file cannot be opened. Returning NULL dataset.")
+      hourly <- NULL
+    }
   } else {
   hourly <- NULL
   }
