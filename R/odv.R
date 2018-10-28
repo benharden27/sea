@@ -7,7 +7,8 @@
 #' @export
 #'
 #' @examples
-format_odv <- function(data,folder,...) {
+format_odv <- function(data,folder,
+                       fields = c("hourly","surfsamp","neuston","adcp","ctd"), ...) {
 
   # Return error is data is not a sea structure
   if(!is_sea_struct(data)) {
@@ -19,9 +20,7 @@ format_odv <- function(data,folder,...) {
     dir.create(folder)
   }
 
-  # select the fields
-  fields <- c("hourly","surfsamp","neuston","adcp","ctd")
-
+  # loop through fields
   for (field in fields) {
     subfolder <- file.path(folder,field)
     if (!file.exists(subfolder)){

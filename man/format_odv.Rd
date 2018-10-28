@@ -4,7 +4,8 @@
 \alias{format_odv}
 \title{Format}
 \usage{
-format_odv(data, folder, ...)
+format_odv(data, folder, fields = c("hourly", "surfsamp", "neuston", "adcp",
+  "ctd"), ...)
 }
 \arguments{
 \item{folder}{}
