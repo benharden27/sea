@@ -163,7 +163,7 @@ read_adcp_ens <- function(adcp_file) {
 #' @examples
 read_adcp_ens_fold <- function(adcp_fold, combine = TRUE) {
 
-  files <- list.files(adcp_fold,".LTA")
+  files <- list.files(adcp_fold,"(.LTA)|(.STA)|(.ENS)|(.ENX)")
 
   adcp_in = NULL
   for (i in 1:length(files)) {
