@@ -75,10 +75,10 @@ plot_neuston <- function(df, var="biomass", data_source = "neuston", step = 1,
     make_base_map(df,title = title, ...) +
       make_track(df, color = "grey") +
       make_points(df1,var = var,data_source = data_source,
-                  ran_qua = ran_qua, type = type)
+                  ran_qua = ran_qua, ran_val = ran_val, type = type)
   } else {
     plot_flowthru(df,var = var,data_source = data_source,
-                  colormap = colormap, title = title,
+                  colormap = colormap, title = title, ran_val = ran_val,
                   ran_qua = ran_qua, type = type)
 
   }
