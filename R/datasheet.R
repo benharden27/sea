@@ -106,6 +106,7 @@ read_neuston <- function(filein) {
                           "heading","heading",readr::parse_double,
                           "tow_dist",c("distance.*m","tow.*distance"),readr::parse_double,
                           "biomass","zoop.*bio",readr::parse_double,
+                          "biodens","density.*zoo",readr::parse_double,
                           "phyl_num","^phyl.*[^a-z]$",readr::parse_integer,
                           "phyl_vol","^phyl.*ml",readr::parse_double,
                           "lept_num","^lept.*[^a-z]$",readr::parse_integer,
