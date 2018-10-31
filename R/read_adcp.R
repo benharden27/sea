@@ -140,7 +140,7 @@ read_adcp_ens <- function(adcp_file) {
 
   lat <- rowMeans(cbind(adcp@data$firstLatitude,adcp@data$lastLatitude))
   lon <- rowMeans(cbind(adcp@data$firstLongitude,adcp@data$lastLongitude))
-  dttm <- as.POSIXct(rowMeans(cbind(adcp@data$firstTime,adcp@data$lastTime)),origin = "1970-01-01")
+  dttm <- as.POSIXct(rowMeans(cbind(adcp@data$firstTime,runmed(adcp@data$lastTime,7))),origin = "1970-01-01")
   d <- adcp@data$distance
 
   backscat <- rowMeans(adcp[["a","numeric"]],dims=2)
