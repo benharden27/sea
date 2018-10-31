@@ -21,7 +21,12 @@ read_ctd <- function(cnv_file, pmin = 5, p = 1, ...) {
 # Initial read ------------------------------------------------------------
 
   # Read CTD data from file
-  ctd <- oce::read.ctd(cnv_file, ...)
+  ctd_safe <- purrr::possibly(oce::read.ctd, NULL)
+  ctd <- ctd_safe(cnv_file,...)
+  if(is.null(ctd)) {
+    warning(paste0("No data found in ", cnv_file, ". Returning NULL."))
+    return(ctd)
+  }
 
   # Trim CTD data to remove upcast and surface values
   ctd_trim <- oce::ctdTrim(ctd, parameters = list(pmin = pmin), ...)
@@ -68,7 +73,10 @@ read_ctd_fold <- function(fold, ...) {
   ctd <- NULL
 
   for (i in 1:length(files)) {
-    ctd <- append(ctd,read_ctd(file.path(fold,files[i]),...))
+    ctd_add <- read_ctd(file.path(fold,files[i]),...)
+    if(!is.null(ctd_add)) {
+      ctd <- append(ctd,ctd_add)
+    }
   }
 
   return(ctd)
