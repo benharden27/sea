@@ -2,7 +2,7 @@
 % Please edit documentation in R/odv.R
 \name{format_ctd_odv}
 \alias{format_ctd_odv}
-\title{Format ADCP Data for ODV inport}
+\title{Format CTD Data for ODV inport}
 \usage{
 format_ctd_odv(data, file, cruiseID = NULL)
 }
@@ -10,5 +10,5 @@ format_ctd_odv(data, file, cruiseID = NULL)
 \item{data}{}
 }
 \description{
-Format ADCP Data for ODV inport
+Format CTD Data for ODV inport
 }

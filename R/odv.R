@@ -8,7 +8,7 @@
 #'
 #' @examples
 format_odv <- function(data,folder,
-                       fields = c("hourly","surfsamp","neuston","adcp","ctd"), ...) {
+                       fields = c("hourly","surfsamp","neuston","adcp","ctd","hydro"), ...) {
 
   # Return error is data is not a sea structure
   if(!is_sea_struct(data)) {
@@ -49,6 +49,9 @@ format_odv <- function(data,folder,
       format_ctd_odv(data,file)
     }
 
+    if(field == "hydro") {
+      format_hydro_odv(data,file)
+    }
   }
 
 
@@ -86,8 +89,8 @@ format_adcp_odv <- function(data,file,cruiseID = NULL) {
     Station = rep_each(1:dim(data$u)[1], nc),
     Type = "C",
     `mon/day/yr` = rep_each(format(data$dttm,"%m/%d/%Y"), nc),
-    `Lon (∞E)` = rep_each(data$lon, nc),
-    `Lat (∞N)` = rep_each(data$lat, nc),
+    `Lon [degrees_east]` = rep_each(data$lon, nc),
+    `Lat [degrees_north]` = rep_each(data$lat, nc),
     `Bot. Depth [m]` = " ",
     `Depth [m]` = rep(data$d, dim(data$u)[1]),
     `Echo Amplitude [counts]` = as.vector(t(data$backscat)),
@@ -106,7 +109,7 @@ format_adcp_odv <- function(data,file,cruiseID = NULL) {
 }
 
 
-#' Format ADCP Data for ODV inport
+#' Format CTD Data for ODV inport
 #'
 #' @param data
 #'
@@ -141,17 +144,17 @@ format_ctd_odv <- function(data,file,cruiseID = NULL) {
     Type = "C",
     `mon/day/yr` = rep_each(format(s[["time"]],"%m/%d/%Y"),length(p)),
     `hh:mm` = rep_each(format(s[["time"]],"%H:%M"), length(p)),
-    `Lon (∞E)` = s[["longitude"]],
-    `Lat (∞N)` = s[["latitude"]],
+    `Lon [degrees_east]` = s[["longitude"]],
+    `Lat [degrees_north]` = s[["latitude"]],
     `Bot. Depth [m]` = rep_each(get_ctd_meta(data,"waterDepth"),length(p)),
     `Depth [m]` = s[["depth"]],
-    `Temperature [∞C]` = s[["temperature"]],
+    `Temperature [~^oC]` = s[["temperature"]],
     `Salinity [psu]` = s[["salinity"]],
-    `Density[sigma-theta,Kg/m^3]` = s[["sigmaTheta"]],
+    `Density[Kg/m~^3]` = s[["sigmaTheta"]],
     `Chl a Fluorescence [V]` = s[["fluorescence"]],
-    `Oxygen,SBE43[umol/Kg]` = s[["oxygen"]],
-    `CDOM Fluorescence [mg/m3]` = " ",
-    `PAR Irradience [uE/m2/s]` = s[["par"]],
+    `Oxygen,SBE43[~$m~#mol/kg]` = s[["oxygen"]],
+    `CDOM Fluorescence [mg/m~^3]` = " ",
+    `PAR Irradience [~$m~#E/m~^2/s]` = s[["par"]],
     `Transmittance [V]` = " ",
     `Oxygen [mL/L]` = s[["oxygen2"]]
   )
@@ -191,12 +194,12 @@ format_hourly_odv <- function(data,file,cruiseID = NULL) {
     Station = 1:dim(data)[1],
     Type = "C",
     `mon/day/yr` = format(data$dttm,"%m/%d/%Y"),
-    `Lon (∞E)` = data$lon,
-    `Lat (∞N)` = data$lat,
+    `Lon [degrees_east]` = data$lon,
+    `Lat [degrees_north]` = data$lat,
     `Bot. Depth [m]` = data$depth_bot,
     `Depth [m]` = 0,
-    `Temperature [∞C]` = data$temp,
-    `Salinity [psu]` = data$sal,
+    `Temperature [~^oC]` = data$temp,
+    `Salinity [PSU]` = data$sal,
     `Fluorescence` = data$fluor,
     `hh:mm` = format(data$dttm,"%H:%M"),
     `Wind Speed [knots]` = data$wind_sp,
@@ -242,8 +245,8 @@ format_neuston_odv <- function(data,file,cruiseID = NULL) {
     Type = "X",
     `mon/day/yr` = format(data$dttm_in,"%m/%d/%Y"),
     `hh:mm` = format(data$dttm_in,"%H:%M"),
-    `Lon (∞E)` = data$lon,
-    `Lat (∞N)` = data$lat,
+    `Lon [degrees_east]` = data$lon,
+    `Lat [degrees_north]` = data$lat,
     `Depth [m]` = 0
   )
 
@@ -286,8 +289,8 @@ format_surfsamp_odv <- function(data,file,cruiseID = NULL) {
     Type = "X",
     `mon/day/yr` = format(data$dttm_local,"%m/%d/%Y"),
     `hh:mm` = format(data$dttm_local,"%H:%M"),
-    `Lon (∞E)` = data$lon,
-    `Lat (∞N)` = data$lat,
+    `Lon [degrees_east]` = data$lon,
+    `Lat [degrees_north]` = data$lat,
     `Depth [m]` = 0
   )
 
@@ -300,3 +303,58 @@ format_surfsamp_odv <- function(data,file,cruiseID = NULL) {
   return(odv_out)
 
 }
+
+
+#' Format hydrowork file dor ODV
+#'
+#' @param data
+#' @param file
+#' @param cruiseID
+#'
+#' @return
+#' @export
+#'
+#' @examples
+format_hydro_odv <- function(data,file = NULL,cruiseID = NULL) {
+
+  # Try and determine the name of the cruise from the data input if not specified. If not, assign "unknown".
+  if(is.null(cruiseID)) {
+    cruiseID <- deparse(substitute(data))
+    if(!stringr::str_detect(stringr::str_sub(cruiseID,1,1),"[C|S|c|s]")) {
+      cruiseID = "unknown"
+    }
+  }
+
+  # Convert from sea structure to get the hourly part
+  if(is_sea_struct(data)){
+    data <- data$hydro
+  }
+
+  odv_out <- tibble::tibble(
+    Cruise = cruiseID,
+    Station = C282$hydro$station,
+    Type = "X",
+    `mon/day/yr` = format(data$dttm,"%m/%d/%Y"),
+    `hh:mm` = format(data$dttm,"%H:%M"),
+    `Lon [degrees_east]` = data$lon,
+    `Lat [degrees_north]` = data$lat,
+    `Bot. Depth [m]` = "",
+    `Depth [m]` = data$z,
+    `Temperature [~^oC]` = data$temp,
+    `Salinity [PSU]` = data$sal,
+    `Density[kg/m~^3]` = data$density,
+    `Chlorophyll a A[~$m~#g/l]` = data$chla,
+    `Phosphate [~$m~#M]` = data$po4,
+    `Nitrate [~$m~#M)` = data$no3,
+    `pH` = data$pH,
+    `Alkalinity` = data$alk
+  )
+
+  if(!is.null(file)){
+    readr::write_tsv(odv_out,file)
+  } else {
+    return(odv_out)
+  }
+
+}
+
