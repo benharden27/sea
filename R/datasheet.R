@@ -357,7 +357,7 @@ read_hourly <- function(filein) {
 
     output <- parse_datasheet(df,args)
 
-    output$date <- lubridate::as_date(output$date,origin="1900-1-1")-1
+    output$date <- lubridate::as_date(output$date,origin="1900-1-1")-2
     local <- lubridate::as_datetime(output$time*60*60*24)
     lubridate::date(local) <- output$date
     df <- tibble::add_column(output,dttm = local,.after=0)
