@@ -192,7 +192,7 @@ format_hourly_odv <- function(data,file,cruiseID = NULL) {
   odv_out <- tibble::tibble(
     Cruise = cruiseID,
     Station = 1:dim(data)[1],
-    Type = "C",
+    Type = "B",
     `mon/day/yr` = format(data$dttm,"%m/%d/%Y"),
     `Lon [degrees_east]` = data$lon,
     `Lat [degrees_north]` = data$lat,
@@ -242,7 +242,7 @@ format_neuston_odv <- function(data,file,cruiseID = NULL) {
   odv_out <- tibble::tibble(
     Cruise = cruiseID,
     Station = 1:dim(data)[1],
-    Type = "X",
+    Type = "B",
     `mon/day/yr` = format(data$dttm_in,"%m/%d/%Y"),
     `hh:mm` = format(data$dttm_in,"%H:%M"),
     `Lon [degrees_east]` = data$lon,
@@ -286,7 +286,7 @@ format_surfsamp_odv <- function(data,file,cruiseID = NULL) {
   odv_out <- tibble::tibble(
     Cruise = cruiseID,
     Station = 1:dim(data)[1],
-    Type = "X",
+    Type = "B",
     `mon/day/yr` = format(data$dttm_local,"%m/%d/%Y"),
     `hh:mm` = format(data$dttm_local,"%H:%M"),
     `Lon [degrees_east]` = data$lon,
@@ -333,7 +333,7 @@ format_hydro_odv <- function(data,file = NULL,cruiseID = NULL) {
   odv_out <- tibble::tibble(
     Cruise = cruiseID,
     Station = C282$hydro$station,
-    Type = "X",
+    Type = "B",
     `mon/day/yr` = format(data$dttm,"%m/%d/%Y"),
     `hh:mm` = format(data$dttm,"%H:%M"),
     `Lon [degrees_east]` = data$lon,
