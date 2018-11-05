@@ -138,9 +138,29 @@ read_adcp_ens <- function(adcp_file) {
 
   }
 
+
   lat <- rowMeans(cbind(adcp@data$firstLatitude,adcp@data$lastLatitude))
   lon <- rowMeans(cbind(adcp@data$firstLongitude,adcp@data$lastLongitude))
-  dttm <- as.POSIXct(rowMeans(cbind(adcp@data$firstTime,runmed(adcp@data$lastTime,7))),origin = "1970-01-01")
+
+  firstTime <- adcp@data$firstTime
+  firstTime[as.numeric(firstTime-runmed(firstTime,11))< -10000] <- NA
+  if(length(which(is.na(firstTime))) > 0) {
+    ti <- 1:length(firstTime)
+    goodi <- !is.na(firstTime)
+    firstTime <- approx(ti[goodi],firstTime[goodi],ti)$y
+    firstTime <- as.POSIXct(firstTime,origin = "1970-1-1",tz = "UTC")
+  }
+
+  lastTime <- adcp@data$lastTime
+  lastTime[as.numeric(lastTime-runmed(lastTime,11))< -10000] <- NA
+  if(length(which(is.na(lastTime))) > 0) {
+    ti <- 1:length(lastTime)
+    goodi <- !is.na(lastTime)
+    lastTime <- approx(ti[goodi],lastTime[goodi],ti)$y
+    lastTime <- as.POSIXct(lastTime,origin = "1970-1-1",tz = "UTC")
+  }
+
+  dttm <- as.POSIXct(rowMeans(cbind(firstTime,lastTime)),origin = "1970-01-01")
   d <- adcp@data$distance
 
   backscat <- rowMeans(adcp[["a","numeric"]],dims=2)
@@ -196,6 +216,9 @@ read_adcp_ens_fold <- function(adcp_fold, combine = TRUE) {
           adcp_add <- adcp_in[[i]]
         } else {
           adcp_add <- interp_adcp(adcp_in[[i]],dvec)
+          if(is.null(adcp_add)) {
+            next
+          }
         }
 
         adcp_out$u <- rbind(adcp_out$u,adcp_add$u)
@@ -230,9 +253,15 @@ interp_adcp <- function(adcp,dvec,vars = c("u","v","backscat","quality","percent
   # Create empty output object
   output <- NULL
 
+  lenv <- dim(adcp[["u"]])[1]
+  if(is.null(lenv)) {
+    return(NULL)
+  }
+
   for (var in vars) {
-    out <- array(NA,c(dim(adcp[[var]])[1],length(dvec)))
-    for (i in 1:dim(adcp[[var]])[1]) {
+
+    out <- array(NA,c(lenv,length(dvec)))
+    for (i in 1:lenv) {
       goodi <- !is.na(adcp[[var]][i,])
       if(sum(goodi)<2) {
         next
