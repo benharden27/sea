@@ -73,18 +73,20 @@ read_neuston <- function(filein) {
   df1 <- read_datasheet(filein)
   df2 <- read_datasheet(filein,sheet=2)
 
+  # if there is no data in the file...
   if(nrow(df1) == 1 & is.null(df2)) {
     return(NULL)
   }
 
-  # check to see if data froms have the same number of row
+  # check to see if data forms have the same number of row
   if(nrow(df1)!=nrow(df2)) {
     warning("Sheets in neuston excel document have different number of rows. Matching from row 1.")
   }
 
   # Need to make this robust - what if there were no matching column names?
   # df <- inner_join(df1,df2)
-  df <- dplyr::bind_cols(df1,df2)
+  # df <- dplyr::bind_cols(df1,df2)
+  df <- dplyr::full_join(df1,df2,by = "Station")
 
   # ADD COMPLETE LIST OF ARGUMENTS (INCORPORATE NAMES?)
 
