@@ -8,7 +8,8 @@
 #'
 #' @examples
 format_odv <- function(data,folder,
-                       fields = c("hourly","surfsamp","neuston","adcp","ctd","hydro"), ...) {
+                       fields = c("hourly","surfsamp","neuston","adcp","ctd","hydro"),
+                       import = FALSE, ...) {
 
   # Return error is data is not a sea structure
   if(!is_sea_struct(data)) {
@@ -52,9 +53,31 @@ format_odv <- function(data,folder,
     if(field == "hydro") {
       format_hydro_odv(data,file)
     }
+
+    if(import) {
+      import_odv(file)
+    }
   }
 
 
+}
+
+
+
+#' Import a txt file to ODV
+#'
+#' @param odv_txt path to the odv txt file you want to import
+#'
+#' @return
+#' @export
+#'
+#' @examples
+import_odv <- function(odv_txt) {
+  odv_txt <- path.expand(odv_txt)
+  cmd_file <- stringr::str_replace(odv_txt,".txt",".cmd")
+  cmd_line <- paste("open_data_file",odv_txt)
+  readr::write_lines(cmd_line,cmd_file)
+  system(paste("/Applications/Ocean\\ Data\\ View\\ \\(64bit\\).app/Contents/MacOS/odv4 -x",cmd_file,"-q"))
 }
 
 
