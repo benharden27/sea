@@ -332,7 +332,7 @@ format_hydro_odv <- function(data,file = NULL,cruiseID = NULL) {
 
   odv_out <- tibble::tibble(
     Cruise = cruiseID,
-    Station = C282$hydro$station,
+    Station = data$station,
     Type = "B",
     `mon/day/yr` = format(data$dttm,"%m/%d/%Y"),
     `hh:mm` = format(data$dttm,"%H:%M"),
@@ -345,9 +345,10 @@ format_hydro_odv <- function(data,file = NULL,cruiseID = NULL) {
     `Density[kg/m~^3]` = data$density,
     `Chlorophyll a A[~$m~#g/l]` = data$chla,
     `Phosphate [~$m~#M]` = data$po4,
-    `Nitrate [~$m~#M)` = data$no3,
+    `Nitrate [~$m~#M]` = data$no3,
     `pH` = data$pH,
-    `Alkalinity` = data$alk
+    `Alkalinity` = data$alk,
+    `Microplastics` = data$m_plastics
   )
 
   if(!is.null(file)){
