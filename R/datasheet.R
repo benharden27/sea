@@ -175,7 +175,7 @@ read_neuston <- function(filein) {
   output <- tibble::as.tibble(output)
 
   # parse the datetime field
-  output$date <- lubridate::as_date(output$date,origin="1900-1-1")
+  output$date <- lubridate::as_date(output$date-2,origin="1900-1-1")
   local_in <- lubridate::as_datetime(output$time_in*60*60*24)
   lubridate::date(local_in) <- output$date
   local_out <- lubridate::as_datetime(output$time_out*60*60*24)
@@ -241,7 +241,7 @@ read_surfsamp <- function(filein) {
                             "o2","^o2",readr::parse_double,
                             "pH","ph",readr::parse_double,
                             "alk","alk",readr::parse_double,
-                            "m_plastics","po4",readr::parse_double,
+                            "m_plastics","micro",readr::parse_double,
                             "notes","notes",readr::parse_character
                             )
 
@@ -249,7 +249,7 @@ read_surfsamp <- function(filein) {
     output <- parse_datasheet(df,args)
 
     # parse the datetime field
-    output$date <- lubridate::as_date(output$date,origin="1900-1-1")
+    output$date <- lubridate::as_date(output$date-2,origin="1900-1-1")
     local <- lubridate::as_datetime(output$time*60*60*24)
     lubridate::date(local) <- output$date
 
@@ -307,6 +307,7 @@ read_hydrocast <- function(filein) {
                             "o2_wink","^o2.*wink",readr::parse_double,
                             "pH","ph",readr::parse_double,
                             "alk","^total.*alk",readr::parse_double,
+                            "m_plastics","micro",readr::parse_double,
                             "notes","notes",readr::parse_character
     )
 
@@ -359,7 +360,7 @@ read_hourly <- function(filein) {
 
     output <- parse_datasheet(df,args)
 
-    output$date <- lubridate::as_date(output$date,origin="1900-1-1")-2
+    output$date <- lubridate::as_date(output$date-2,origin="1900-1-1")
     local <- lubridate::as_datetime(output$time*60*60*24)
     lubridate::date(local) <- output$date
     df <- tibble::add_column(output,dttm = local,.after=0)
