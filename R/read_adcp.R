@@ -231,6 +231,15 @@ read_adcp_ens_fold <- function(adcp_fold, combine = TRUE) {
         adcp_out$dttm <- append(adcp_out$dttm,adcp_add$dttm)
       }
     }
+    sorti <- order(adcp_out$dttm)
+    adcp_out$u <- adcp_out$u[sorti, ]
+    adcp_out$v <- adcp_out$v[sorti, ]
+    adcp_out$backscat <- adcp_out$backscat[sorti, ]
+    adcp_out$quality <- adcp_out$quality[sorti, ]
+    adcp_out$percent <- adcp_out$percent[sorti, ]
+    adcp_out$lon <- adcp_out$lon[sorti]
+    adcp_out$lat <- adcp_out$lat[sorti]
+    adcp_out$dttm <- adcp_out$dttm[sorti]
     return(adcp_out)
   } else {
     return(adcp_in)
