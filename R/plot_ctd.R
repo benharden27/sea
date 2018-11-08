@@ -279,7 +279,7 @@ prep_section_hydro <- function(df, var = "chla", select = NULL, dist_vec = NULL,
   v <- array(NA, dim = c(length(stations), length(d)))
   for (i in 1:length(stations)) {
     prof <- dplyr::filter(df,station == stations[i])
-    if(length(which(!is.na(prof[[var]]))) == 0) {
+    if(length(which(!is.na(prof[[var]]))) < 2) {
       v[i, ] <- rep(NA,length(d))
     } else {
       v[i, ] <- approx(prof$z,prof[[var]],d,rule=2:1)$y
