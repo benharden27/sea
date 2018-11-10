@@ -190,7 +190,9 @@ prep_section_ctd <- function(sec, var = "temperature", select = NULL, dist_vec =
   # Set up v arrays for plotting
   v <- array(NA, dim = c(length(which(!is.na(dist))), length(p)))
   for (i in which(!is.na(dist))) {
-    v[i, ] <- s[['station']][[i]][[var]]
+    if(!is.null(s[['station']][[i]][[var]])) {
+      v[i, ] <- s[['station']][[i]][[var]]
+    }
   }
 
   dist <- dist[!is.na(dist)]
