@@ -66,7 +66,7 @@ read_ctd <- function(cnv_file, pmin = 5, p = 1, ...) {
 #' @export
 #'
 #' @examples
-read_ctd_fold <- function(fold, ...) {
+read_ctd_fold <- function(fold, check_vars = TRUE, ...) {
 
   files <- list.files(fold, pattern = "\\.cnv")
 
@@ -77,6 +77,27 @@ read_ctd_fold <- function(fold, ...) {
     if(!is.null(ctd_add)) {
       ctd <- append(ctd,ctd_add)
     }
+  }
+
+  # checks to see if there are missing vars recorded in some ctds and not others
+  # fill with NA is so
+  if(check_vars) {
+    vars <- NULL
+    for (i in 1:length(ctd)) {
+      var <- names(ctd[[i]]@data)
+      vars <- union(vars,var)
+    }
+    for (i in 1:length(ctd)) {
+      var <- names(ctd[[i]]@data)
+      varmiss <- setdiff(vars,var)
+      if(length(varmiss)>1){
+        l <- length(ctd[[i]]@data$pressure)
+        for (j in varmiss) {
+          ctd[[i]][[j]] <- rep(NA,l)
+        }
+      }
+    }
+
   }
 
   return(ctd)
