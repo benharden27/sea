@@ -43,13 +43,21 @@ read_ctd <- function(cnv_file, pmin = 5, p = 1, ...) {
 
   X <- read_cnv_latlon(cnv_file)
 
-  line <- grep("Water Depth",X$r)[1]
+  line <- stringr::str_which(X$r,"Depth")[1]
   depth <- as.numeric(strsplit(X$r[line],'h')[[1]][2])
+
+  line <- stringr::str_which(X$r,"\\*{2}.*(T|t)ime")[1]
+  time <- stringr::str_extract(X$r[line],"(?<== ).*")
+  line <- stringr::str_which(X$r,"\\*{2}.*(D|d)ate")[1]
+  date <- stringr::str_extract(X$r[line],"(?<== ).*")
+
+  dttm <- lubridate::dmy_hm(paste(date,time),tz = "UTC")
 
   ctd@metadata$longitude <- X$lon
   ctd@metadata$latitude <- X$lat
   ctd@metadata$station <- as.numeric(strsplit(cnv_file,'-')[[1]][2]) # have to do this to make makeSection work
   ctd@metadata$waterDepth <- depth
+  ctd@metadata$time <- dttm
   ctd@metadata$filename <- cnv_file
 
   return(ctd)
