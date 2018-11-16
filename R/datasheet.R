@@ -94,6 +94,7 @@ read_neuston <- function(filein) {
                           "station","^station",readr::parse_character,
                           "date","^date",readr::parse_integer,
                           "time_in","^time.*in",readr::parse_double,
+                          "utc_in","utc.*time",readr::parse_character,
                           "time_out","^time.*out",readr::parse_double,
                           "lon","londec",readr::parse_double,
                           "lat","latdec",readr::parse_double,
@@ -177,14 +178,29 @@ read_neuston <- function(filein) {
   # parse the datetime field
   output$date <- lubridate::as_date(output$date-2,origin="1900-1-1")
   local_in <- lubridate::as_datetime(output$time_in*60*60*24)
+
+  lubridate::date(local_in) <- lubridate::ymd("1970-1-1")
+  utc_in <- lubridate::ymd_hm(paste("1970-1-1",output$utc_in))
+
+  dtime <- as.numeric(local_in-utc_in)
+  dtime[dtime > 0] <- dtime[dtime > 0] - 24
+  dtime[dtime > 12] <- 24 - dtime[dtime > 12]
+  dtime[dtime < -12] <- 24 - dtime[dtime < -12]
+  tz <- round(dtime)
+
   lubridate::date(local_in) <- output$date
+  utc_in <- local_in - tz*60*60
+
   local_out <- lubridate::as_datetime(output$time_out*60*60*24)
   lubridate::date(local_out) <- output$date
+
   difft <- local_out - local_in
   difft[difft>200] <- difft[difft>60]-lubridate::dhours(24)
   local_out <- local_in + difft
-  output <- tibble::add_column(output,dttm_in = local_in,dttm_out = local_out,.after=1)
 
+  output <- tibble::add_column(output,dttm = utc_in, tz = tz, dttm_in = local_in, dttm_out = local_out,.after=1)
+
+  # is the following still important?!
   namelist <- append(namelist,c("dttm_in","dttm_out"),after = 1)
   namelist <- namelist[!stringr::str_detect(namelist,"^time_in$|^time_out$|^date$")]
 
