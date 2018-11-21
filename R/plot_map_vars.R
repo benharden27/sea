@@ -44,7 +44,7 @@ plot_flowthru <- function(df, var="temp", data_source = "elg", step = NULL,
   make_base_map(df,title = title, ...) +
     make_points(df,data_source = data_source, var = var,
               step = step, ran_val = ran_val, ran_qua = ran_qua, type = type) +
-    ggplot2::scale_color_gradientn(name = "", colors = colormap(100))
+    ggplot2::scale_color_gradientn(name = "", colors = colormap(100), position = "top")
 
 }
 

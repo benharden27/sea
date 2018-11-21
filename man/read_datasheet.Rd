@@ -5,7 +5,7 @@
 \title{Generic reader for SEA excel data sheets}
 \usage{
 read_datasheet(filein, sheet = 1, n_max = 100,
-  range = readxl::cell_cols(1:100))
+  range = readxl::cell_cols(1:100), ...)
 }
 \arguments{
 \item{filein}{xls file input}
