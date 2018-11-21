@@ -4,9 +4,9 @@
 \alias{prep_section_hydro}
 \title{Prepare bottle-derived data to plot}
 \usage{
-prep_section_hydro(df, var = "chla", select = NULL, dist_vec = NULL,
-  along_section = F, sec_lon = NULL, sec_lat = NULL, dx = 5, dz = 25,
-  width = 10)
+prep_section_hydro(df, var = "chla", rm_na_prof = TRUE, select = NULL,
+  dist_vec = NULL, along_section = F, sec_lon = NULL, sec_lat = NULL,
+  dx = 5, dz = 25, width = 10)
 }
 \arguments{
 \item{df}{data frame read in using read_hydrocast}

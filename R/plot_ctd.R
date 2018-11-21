@@ -214,9 +214,25 @@ prep_section_ctd <- function(sec, var = "temperature", select = NULL, dist_vec =
 #' @export
 #'
 #' @examples
-prep_section_hydro <- function(df, var = "chla", select = NULL, dist_vec = NULL,
+prep_section_hydro <- function(df, var = "chla", rm_na_prof = TRUE, select = NULL, dist_vec = NULL,
                                along_section = F, sec_lon = NULL, sec_lat = NULL,
                                dx = 5, dz = 25, width = 10) {
+
+  if(rm_na_prof) {
+    # subsample for all rows that dont have a NA in the variable
+    stats <- df$station[!is.na(df[[var]])]
+    # select only those that have at least 2 values in the profile
+    stats <- unique(stats[duplicated(stats)])
+    # complete list of all stations
+    all_stats <- unique(df$station)
+    # chose just those ones that
+    select1 <- which(all_stats %in% stats)
+    if(!is.null(select)) {
+      select <- select[select %in% select1]
+    } else {
+      select <- select1
+    }
+  }
 
   sta_i <- !duplicated(df$station)
   stations <- df$station[sta_i]
@@ -232,6 +248,10 @@ prep_section_hydro <- function(df, var = "chla", select = NULL, dist_vec = NULL,
   stations <- stations[sti]
   lonloc <- lonloc[sti]
   latloc <- latloc[sti]
+
+
+
+
 
   if (along_section) {
 
