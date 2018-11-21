@@ -11,9 +11,9 @@
 #'
 #' @examples
 #' read_datasheet()
-read_datasheet <- function(filein,sheet=1,n_max=100,range=readxl::cell_cols(1:100)) {
+read_datasheet <- function(filein,sheet=1,n_max=100,range=readxl::cell_cols(1:100), ...) {
 
-  df<-readxl::read_excel(filein,sheet=sheet,col_types = "text",n_max=n_max,range=range)
+  df<-readxl::read_excel(filein,sheet=sheet,col_types = "text",n_max=n_max,range=range, ...)
 
   # First heading Line gets read in as column names
   colnames(df) <- stringr::str_replace_all(colnames(df),"[-\\+\\ ]",".")
@@ -187,6 +187,7 @@ read_neuston <- function(filein) {
   dtime[dtime > 12] <- 24 - dtime[dtime > 12]
   dtime[dtime < -12] <- 24 - dtime[dtime < -12]
   tz <- round(dtime)
+
 
   lubridate::date(local_in) <- output$date
   utc_in <- local_in - tz*60*60
