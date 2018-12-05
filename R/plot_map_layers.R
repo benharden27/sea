@@ -10,7 +10,7 @@
 #'
 #' @examples
 make_base_map <- function(df = NULL, lonlim = NULL, latlim = NULL,
-                          data_source = 'hourly', plot_bathy = F, high_res = F,
+                          data_source = 'hourly', bathy = F, bathy_legend = F, grid = T, high_res = F,
                           title = "", factor = 0.15, buffer = 5) {
 
   # choose which resolution of coastline
@@ -57,8 +57,8 @@ make_base_map <- function(df = NULL, lonlim = NULL, latlim = NULL,
     df <- format_lon(df)
 
     # load and subset bathymetry if requested
-    if(plot_bathy)
-      bathy <- extract_bathy(df)
+    if(bathy)
+      bathy_data <- extract_bathy(df)
 
     # Set longitude limits if not prescribed
     if(is.null(lonlim)) {
@@ -82,51 +82,75 @@ make_base_map <- function(df = NULL, lonlim = NULL, latlim = NULL,
   # subset coastline data (TODO: need to ensure that 5 degs is a good selection for buffer)
   coastline <- subset(coastline,long > lonlim[1]-buffer & long < lonlim[2]+buffer & lat > latlim[1]-buffer & lat < latlim[2]+buffer)
 
-  # start ggplot of base map
-  base_map <- ggplot2::ggplot()
-
-  if(plot_bathy) {
-    base_map <- base_map +
-      ggplot2::geom_raster(ggplot2::aes(x,y,fill = z), data=bathy, interpolate = TRUE) +
-      ggplot2::scale_fill_gradientn(colors = oce::oce.colorsGebco())
-  }
-
-  base_map <- base_map +
-    ggplot2::geom_polygon(ggplot2::aes(x=long, y = lat, group = group),data=coastline) +
-    ggplot2::coord_quickmap(xlim=lonlim, ylim=latlim, expand = F) +
-    ggplot2::labs(x = "", y = "", title = title) +
-    ggplot2::theme_bw() +
-    ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
-
-#
+  # Set major tick marks and format labels to look pretty
   xlabs <- pretty(lonlim)
   ylabs <- pretty(latlim)
 
-#   xlabs <- ggplot2::ggplot_build(base_map)$layout$panel_ranges[[1]]$x.major_source
-#   ylabs <- ggplot2::ggplot_build(base_map)$layout$panel_ranges[[1]]$y.major_source
-# #
+  # Following is just for record - it shows the way to extract the default ticks from the plot if the plot has already been made
+  #   xlabs <- ggplot2::ggplot_build(base_map)$layout$panel_ranges[[1]]$x.major_source
+  #   ylabs <- ggplot2::ggplot_build(base_map)$layout$panel_ranges[[1]]$y.major_source
+
+  # save these values
   xlabs_old <- xlabs
   ylabs_old <- ylabs
 
+  # format the numerical tick marks to have degree symbols
+  # E/W
   if (mean(xlabs, na.rm = T) < 0) {
     xlabs <- paste0(abs(xlabs),"ºW")
   } else {
     xlabs[xlabs_old>180] <- paste0(360-xlabs_old[xlabs_old>180],"ºW")
     xlabs[xlabs_old<=180] <- paste0(xlabs_old[xlabs_old<=180],"ºE")
   }
-#
+
+  # N/S
   if(mean(ylabs,na.rm=T) > 0) {
     ylabs <- paste0(ylabs,"ºN")
   } else {
     ylabs <- paste0(abs(ylabs),"ºS")
   }
 
-#
+  # start ggplot of base map
+  base_map <- ggplot2::ggplot()
+
+  # Add bathymetry if this is turned on
+  if(bathy) {
+    base_map <- base_map +
+      ggplot2::geom_raster(ggplot2::aes(x,y,fill = z), data=bathy_data, interpolate = TRUE) +
+      ggplot2::scale_fill_gradientn(colors = oce::oce.colorsGebco(), guide = bathy_legend)
+  }
+
+  # Plot the rest of the layers and parameters
   base_map <- base_map +
+    ggplot2::geom_polygon(ggplot2::aes(x=long, y = lat, group = group),data=coastline) +
+    ggplot2::coord_quickmap(xlim=lonlim, ylim=latlim, expand = F) +
+    ggplot2::theme_bw()
+
+  # add a title if specified
+  if(title != "") {
+    base_map <- base_map +
+      ggplot2::labs(title = title) +
+      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+  } else {
+    base_map <- base_map +
+      ggplot2::theme(plot.title = ggplot2::element_blank())
+  }
+
+  # Format other elements of the plot
+  base_map <- base_map +
+    ggplot2::theme(axis.title.x=ggplot2::element_blank()) +
+    ggplot2::theme(axis.title.y=ggplot2::element_blank()) +
+    ggplot2::theme(panel.grid = ggplot2::element_blank()) +
     ggplot2::scale_x_continuous(breaks = xlabs_old, labels = xlabs) +
     ggplot2::scale_y_continuous(breaks = ylabs_old, labels = ylabs)
 
-  #
+  # Add a grid if specified
+  if(grid) {
+    base_map <- base_map +
+      ggplot2::geom_vline(xintercept=xlabs_old, color = "grey", linetype = 3) +
+      ggplot2::geom_hline(yintercept=ylabs_old, color = "grey", linetype = 3)
+  }
+
 
   return(base_map)
 }
