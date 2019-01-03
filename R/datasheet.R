@@ -178,19 +178,25 @@ read_neuston <- function(filein) {
   # parse the datetime field
   output$date <- lubridate::as_date(output$date-2,origin="1900-1-1")
   local_in <- lubridate::as_datetime(output$time_in*60*60*24)
-
-  lubridate::date(local_in) <- lubridate::ymd("1970-1-1")
-  utc_in <- lubridate::ymd_hm(paste("1970-1-1",output$utc_in))
-
-  dtime <- as.numeric(local_in-utc_in)
-  dtime[dtime > 0] <- dtime[dtime > 0] - 24
-  dtime[dtime > 12] <- 24 - dtime[dtime > 12]
-  dtime[dtime < -12] <- 24 - dtime[dtime < -12]
-  tz <- round(dtime)
-
-
   lubridate::date(local_in) <- output$date
-  utc_in <- local_in - tz*60*60
+
+  # TODO: FIX the reading in of UTC times
+  # if (length(output$utc_in) != length(which(is.na(output$utc_in)))) {
+  #
+  #   utc_in <- lubridate::ymd_hm(paste("1970-1-1",output$utc_in))
+  #
+  #   dtime <- as.numeric(local_in-utc_in)
+  #   dtime[dtime > 0] <- dtime[dtime > 0] - 24
+  #   dtime[dtime > 12] <- 24 - dtime[dtime > 12]
+  #   dtime[dtime < -12] <- 24 - dtime[dtime < -12]
+  #   tz <- round(dtime)
+  #
+  #   utc_in <- local_in - tz*60*60
+  #
+  # } else {
+    utc_in <- NA
+    tz <- NA
+  # }
 
   local_out <- lubridate::as_datetime(output$time_out*60*60*24)
   lubridate::date(local_out) <- output$date
