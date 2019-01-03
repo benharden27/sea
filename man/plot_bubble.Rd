@@ -4,8 +4,8 @@
 \alias{plot_bubble}
 \title{Make a bubble plot}
 \usage{
-plot_bubble(df, var, ran_val = NULL, ran_qua = c(0, 1), base_map = NULL,
-  ...)
+plot_bubble(df, var, ran_val = NULL, ran_qua = c(0, 1),
+  base_map = NULL, ...)
 }
 \arguments{
 \item{...}{}

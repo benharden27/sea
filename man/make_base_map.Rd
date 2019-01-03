@@ -6,7 +6,7 @@
 \usage{
 make_base_map(df = NULL, lonlim = NULL, latlim = NULL,
   data_source = "hourly", bathy = F, bathy_legend = F, grid = T,
-  high_res = F, title = "", factor = 0.15, buffer = 5)
+  high_res = F, title = NULL, factor = 0.15, buffer = 5)
 }
 \arguments{
 \item{latlim}{}

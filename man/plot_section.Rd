@@ -4,8 +4,8 @@
 \alias{plot_section}
 \title{Plot a section}
 \usage{
-plot_section(X, adcp_var = "u", breaks = NULL, zlim = NULL, ylim = c(0,
-  600), colormap = oce::oce.colorsTemperature(), ...)
+plot_section(X, adcp_var = "u", breaks = NULL, zlim = NULL,
+  ylim = c(0, 600), colormap = oce::oce.colorsTemperature(), ...)
 }
 \arguments{
 \item{ylim}{depth range to plot}

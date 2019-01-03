@@ -4,9 +4,9 @@
 \alias{prep_section_adcp}
 \title{Prepare ADCP data for plotting section}
 \usage{
-prep_section_adcp(X, select = NULL, dist_vec = NULL, along_section = F,
-  sec_lon = NULL, sec_lat = NULL, dx = 5, dz = 25, width = 10,
-  grid = F, ...)
+prep_section_adcp(X, select = NULL, dist_vec = NULL,
+  along_section = F, sec_lon = NULL, sec_lat = NULL, dx = 5,
+  dz = 25, width = 10, grid = F, ...)
 }
 \arguments{
 \item{sec_lon}{two point vector c(starting lon, ending lon)}

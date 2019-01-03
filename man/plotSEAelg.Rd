@@ -4,8 +4,8 @@
 \alias{plotSEAelg}
 \title{Plot flowthrough data stored in an ELG file}
 \usage{
-plotSEAelg(df, vars = c(1, 2, 3, 4), step = 60, reg = "", bathy = T,
-  new_elg = F)
+plotSEAelg(df, vars = c(1, 2, 3, 4), step = 60, reg = "",
+  bathy = T, new_elg = F)
 }
 \arguments{
 \item{df}{data frame produced by using readSEAelg().}

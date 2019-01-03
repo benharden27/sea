@@ -4,9 +4,9 @@
 \alias{prep_section_ctd}
 \title{Prepare ctd objects to plot as a section}
 \usage{
-prep_section_ctd(sec, var = "temperature", select = NULL, dist_vec = NULL,
-  along_section = F, sec_lon = NULL, sec_lat = NULL, dx = 5, dz = 5,
-  width = 10)
+prep_section_ctd(sec, var = "temperature", select = NULL,
+  dist_vec = NULL, along_section = F, sec_lon = NULL,
+  sec_lat = NULL, dx = 5, dz = 5, width = 10)
 }
 \arguments{
 \item{sec}{ctd list or section object to make into section}

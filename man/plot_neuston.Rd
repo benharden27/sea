@@ -5,8 +5,9 @@
 \title{Plot a neuston tow dataset on a map}
 \usage{
 plot_neuston(df, var = "biomass", data_source = "neuston", step = 1,
-  colormap = oce::oce.colorsTemperature(), ran_val = NULL, ran_qua = c(0,
-  1), title = stringr::str_to_title(var), type = "bubble", ...)
+  colormap = oce::oce.colorsTemperature(), ran_val = NULL,
+  ran_qua = c(0, 1), title = stringr::str_to_title(var),
+  type = "bubble", ...)
 }
 \arguments{
 \item{...}{}

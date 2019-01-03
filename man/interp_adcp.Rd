@@ -4,7 +4,8 @@
 \alias{interp_adcp}
 \title{Interpolate an adcp field to different depths}
 \usage{
-interp_adcp(adcp, dvec, vars = c("u", "v", "backscat", "quality", "percent"))
+interp_adcp(adcp, dvec, vars = c("u", "v", "backscat", "quality",
+  "percent"))
 }
 \arguments{
 \item{vars}{}

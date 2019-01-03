@@ -4,8 +4,8 @@
 \alias{plotSEAcurr}
 \title{Plot map of currents from hull-mounted ADCP data}
 \usage{
-plotSEAcurr(X, stp = 6, scale = 0.2, plotKEY = T, reg = "", surf = F,
-  plotCT = T)
+plotSEAcurr(X, stp = 6, scale = 0.2, plotKEY = T, reg = "",
+  surf = F, plotCT = T)
 }
 \arguments{
 \item{X}{object created by readSEAadcp() or readSEAadcp_all().}
