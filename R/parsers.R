@@ -31,7 +31,7 @@ parse_field <- function(df,regex,parse_fun,...) {
   # parse the selected column based on the parser given to function
   if (length(ii)==0) {
     warning(paste("One field not found in ELG file. Setting all values to NA:",regex[i]))
-    output <- parse_fun(rep(NA,nrow(df)),...)
+    output <- parse_fun(rep("NA",nrow(df)),...)
   } else {
     output <- parse_fun(df[[ii]],...)
   }
