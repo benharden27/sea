@@ -70,16 +70,16 @@ package_data <- function(root_folder,cruiseID=NULL,...) {
   }
 
   # then adcp
-  adcp_fold <- file.path(root_folder,"OceanDataView","ADCP Text Files")
-  if(length(list.files(adcp_fold)) == 0) {
-    adcp_fold <-  file.path(root_folder,"ADCP")
-    if(length(list.files(adcp_fold,".LTA")) == 0) {
+  adcp_fold <-  file.path(root_folder,"ADCP")
+  if(length(list.files(adcp_fold,".LTA")) == 0) {
+    adcp_fold <- file.path(root_folder,"OceanDataView","ADCP Text Files")
+    if(length(list.files(adcp_fold)) == 0) {
       adcp <- NULL
     } else {
-      adcp <- read_adcp_ens_fold(adcp_fold)
+      adcp <- read_adcp_fold(adcp_fold)
     }
   } else {
-    adcp <- read_adcp_fold(adcp_fold)
+    adcp <- read_adcp_ens_fold(adcp_fold)
   }
 
   # then ctd
