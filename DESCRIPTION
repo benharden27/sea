@@ -3,7 +3,7 @@ Title: Process and plot data from the Sea Education Association's archive
 Version: 0.0.0.9000
 Authors@R: person("Ben", "Harden", email = "bharden@sea.edu", role = c("aut", "cre"))
 Description: Process and plot data from the Sea Education Association's archive.
-Depends: R (>= 3.3.2)
+Depends: R (>= 3.4.3)
 License: Free
 Encoding: UTF-8
 LazyData: true
