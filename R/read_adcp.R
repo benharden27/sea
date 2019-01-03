@@ -138,8 +138,18 @@ read_adcp_ens <- function(adcp_file) {
 
   }
 
-
   lat <- rowMeans(cbind(adcp@data$firstLatitude,adcp@data$lastLatitude))
+  difflon <- adcp@data$firstLongitude - adcp@data$lastLongitude
+  if(length(which(abs(difflon) > 1))) {
+    ii <- which(abs(difflon) > 1)
+    for (i in ii) {
+      if(difflon[i] > 0) {
+        adcp@data$lastLongitude[i] <- adcp@data$lastLongitude[i] + 360
+      } else {
+        adcp@data$lastLongitude[i] <- adcp@data$lastLongitude[i] - 360
+      }
+    }
+  }
   lon <- rowMeans(cbind(adcp@data$firstLongitude,adcp@data$lastLongitude))
 
   firstTime <- adcp@data$firstTime
@@ -167,9 +177,11 @@ read_adcp_ens <- function(adcp_file) {
   quality <- rowMeans(adcp[["q","numeric"]],dims=2)
   percent <- adcp[["g","numeric"]][ , , 4]
 
-  adcp <- list(lon = lon, lat = lat, dttm = dttm, d = d,
-               u = adcp@data$v[ , , 1], v = adcp@data$v[ , , 2],
-               backscat = backscat, quality = quality, percent = percent)
+  goodi <- !(duplicated(lon) & duplicated(lat))
+
+  adcp <- list(lon = lon[goodi], lat = lat[goodi], dttm = dttm[goodi], d = d,
+               u = adcp@data$v[goodi , , 1], v = adcp@data$v[goodi , , 2],
+               backscat = backscat[goodi,], quality = quality[goodi,], percent = percent[goodi,])
 }
 
 
