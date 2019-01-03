@@ -11,7 +11,7 @@
 #' @examples
 make_base_map <- function(df = NULL, lonlim = NULL, latlim = NULL,
                           data_source = 'hourly', bathy = F, bathy_legend = F, grid = T, high_res = F,
-                          title = "", factor = 0.15, buffer = 5) {
+                          title = NULL, factor = 0.15, buffer = 5) {
 
   # choose which resolution of coastline
   if(high_res == T) {
@@ -115,9 +115,17 @@ make_base_map <- function(df = NULL, lonlim = NULL, latlim = NULL,
 
   # Add bathymetry if this is turned on
   if(bathy) {
+    breaks = pretty(pretty(bathy_data$z))
+
     base_map <- base_map +
       ggplot2::geom_raster(ggplot2::aes(x,y,fill = z), data=bathy_data, interpolate = TRUE) +
-      ggplot2::scale_fill_gradientn(colors = oce::oce.colorsGebco(), guide = bathy_legend)
+      ggplot2::scale_fill_gradientn(colors = oce::oce.colorsGebco(), breaks = breaks, labels = -breaks, name = NULL)
+
+    if(!bathy_legend) {
+      base_map <- base_map +
+        ggplot2::guides(fill = FALSE)
+
+    }
   }
 
   # Plot the rest of the layers and parameters
@@ -127,7 +135,7 @@ make_base_map <- function(df = NULL, lonlim = NULL, latlim = NULL,
     ggplot2::theme_bw()
 
   # add a title if specified
-  if(title != "") {
+  if(!is.null(title)) {
     base_map <- base_map +
       ggplot2::labs(title = title) +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
@@ -281,6 +289,14 @@ make_vectors <- function(df, data_source = "elg", step = 60, scale = 1) {
 
   vec <- make_vector_lonlat(df$lon,df$lat,df$u,df$v)
   df <- dplyr::mutate(df,lone = vec$lone, late = vec$late)
+
+  # # set up for creating a legend
+  # veclen <- oce::geodDist(vec$lon,vec$lat,vec$lone,vec$late)
+  # speed <- sqrt(df$u^2 + df$v^2)
+  # ratio <- mean(veclen/speed,na.rm = T)
+  #
+  # sp_break <- pretty(speed)
+  # vec_break <- sp_break * ratio
 
   # set up th range of values to be potted
   ran <- seq(1,nrow(df),step)
